@@ -1,0 +1,76 @@
+----------------------------------------------
+		riak-c-driver
+		 v0.01 alpha
+
+by Piotr Nosek, Erlang Solutions Ltd.
+----------------------------------------------
+
+--- TABLE OF CONTENTS ---
+
+1. Overview
+2. Requirements
+3. Installation
+4. Usage
+5. TODO list
+6. Buglist
+7. Version history
+8. Links and references
+
+--- 1. Overview ---
+Riak[1] is a No-SQL database, which emphasizes on replication and data distribution. This driver/library provides means to communicate with Riak instances using cURL[2]. In fact it works as cURL wrapper and HTTP response parser. Originally this library was created during attempts of benchmarking Riak in comaprison to MongoDB[3] and MySQL[4] and it was decided that it deserves being a separate project. ;)
+Right now this driver provides very limited functionality, but it's definitely something to start with.
+
+--- 2. Requirements ---
+Dependencies for this project: (header files required for compilation)
+- cURL
+- json-c[5]
+
+C standard library is also required. Library was tested with gcc but it should work fine with other C compilers.
+
+--- 3. Installation ---
+
+Just type
+$ make
+and then (as superuser)
+# make install
+
+This will create dynamic-linked library libriakdrv.so and copy it to PREFIX/lib (default PREFIX: /usr/local). Additionaly riakdrv.h header file will be copied to PREFIX/include.
+
+If you want to uninstall the library, use
+# make uninstall
+This will erase both .so and .h file.
+
+--- 4. Usage ---
+
+To use the library, just include riakdrv.h header file and add -lriakdrv to your linker parameters.
+
+Coming soon: API documentation.
+
+--- 5. TODO list ---
+- multiple connection support
+- getting JSON from DB by key
+- error handling
+- logging
+- tests
+- detailed API description
+
+- aided MapReduce statement creation?
+
+--- 6. Buglist ---
+Probably too many to list. :) It's very alpha version though...
+
+--- 7. Version history ---
+
+==> v0.01 alpha <==
+- opening/closing "connection"
+- no multiple "connections" support
+- putting JSON data into DB
+- getting JSON data from DB with MapReduce
+- getting raw data from DB with RiakSearch
+
+--- 8. Links and references ---
+[1] http://wiki.basho.com
+[2] http://curl.haxx.se
+[3] http://www.mongodb.org
+[4] http://www.mysql.com
+[5] http://oss.metaparadigm.com/json-c/
