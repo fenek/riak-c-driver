@@ -55,20 +55,26 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <code>#include &lt;json/json_object.h&gt;</code><br/>
 <code>#include &lt;sys/types.h&gt;</code><br/>
 <code>#include &lt;curl/curl.h&gt;</code><br/>
+<code>#include &quot;<a class="el" href="riakerrors_8h_source.html">riakerrors.h</a>&quot;</code><br/>
 
 <p><a href="riakdrv_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr><td colspan="2"><h2><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">struct &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRIAK__CONN.html">RIAK_CONN</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Connection handle structure.  <a href="structRIAK__CONN.html#_details">More...</a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">struct &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRIAK__OP.html">RIAK_OP</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Riak operation structure.  <a href="structRIAK__OP.html#_details">More...</a><br/></td></tr>
 <tr><td colspan="2"><h2><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8h.html#a9b18372e8fb2d6be369fd1746567e82c">riak_init</a> (char *hostname, int pb_port, int curl_port, <a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create new handle.  <a href="#a9b18372e8fb2d6be369fd1746567e82c"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8h.html#a8f4c5101059d0894aecbbfbbd3db680d">riak_exec_op</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, <a class="el" href="structRIAK__OP.html">RIAK_OP</a> *command, <a class="el" href="structRIAK__OP.html">RIAK_OP</a> *result)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Executes Riak operation via Protocol Buffers socket and receives response.  <a href="#a8f4c5101059d0894aecbbfbbd3db680d"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8h.html#a4afa67d57602fb8421d5e62a1fbafaf0">riak_ping</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Pings Riak server.  <a href="#a4afa67d57602fb8421d5e62a1fbafaf0"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">char **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8h.html#a974a652ca95fdfa26eb7bda6f1c0b08f">riak_list_buckets</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, int *n_buckets)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Fetches list of buckets.  <a href="#a974a652ca95fdfa26eb7bda6f1c0b08f"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8h.html#ad0615f1f92010db78712cd2a06ac5147">riak_put_json</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, char *bucket, char *key, json_object *elem)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">json_object **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8h.html#a6fc65357610dd512f9ebdba67d559e0d">riak_get_json_mapred</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, char *mapred_statement, int *ret_len)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">json_object **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8h.html#acc59796ce2fc0518131240e2244ad2f2">riak_get_json_rs</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, char *query, int *ret_len)</td></tr>
@@ -134,6 +140,18 @@ Functions</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+
+<p>Executes Riak operation via Protocol Buffers socket and receives response. </p>
+<p>This is universal function for executing Riak operations and receiving responses. It is a wrapper for socket operations. Ultimately, user shouldn't have to use this function because other functions are to cover all possible operations. Still, probably this function will remain in library API even then.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>connstruct</em>&nbsp;</td><td>connection handle </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>command</em>&nbsp;</td><td>command to be sent to Riak </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>result</em>&nbsp;</td><td>structure for response; this function won't allocate space and won't check if result structure exists!</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if success, error code &gt; 0 when failure </dd></dl>
 
 </div>
 </div>
@@ -279,7 +297,7 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="return"><dt><b>Returns:</b></dt><dd>handle to Riak connection; if connstruct != NULL, then connstruct is returned </dd></dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>handle to Riak connection; if connstruct != NULL, then connstruct is returned; returns NULL on error </dd></dl>
 
 </div>
 </div>
@@ -308,6 +326,17 @@ Functions</h2></td></tr>
 </div>
 <div class="memdoc">
 
+<p>Fetches list of buckets. </p>
+<p>This function sends list buckets request to Riak and returns array of null-terminated strings containing names of all buckets. This array is not managed later so user should take care of freeing it after usage!</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>connstruct</em>&nbsp;</td><td>connection handle </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>n_buckets</em>&nbsp;</td><td>pointer to integer, where bucket count will be written</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>array (of n_buckets length) of null-terminated strings; NULL on error </dd></dl>
+
 </div>
 </div>
 <a class="anchor" id="a4afa67d57602fb8421d5e62a1fbafaf0"></a><!-- doxytag: member="riakdrv.h::riak_ping" ref="a4afa67d57602fb8421d5e62a1fbafaf0" args="(RIAK_CONN *connstruct)" -->
@@ -325,6 +354,16 @@ Functions</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+
+<p>Pings Riak server. </p>
+<p>Sends ping request to Riak via Protocol Buffers.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>connstruct</em>&nbsp;</td><td>connection handle</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if success, not 0 on error </dd></dl>
 
 </div>
 </div>
@@ -373,7 +412,7 @@ Functions</h2></td></tr>
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&nbsp;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&nbsp;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&nbsp;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&nbsp;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&nbsp;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&nbsp;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&nbsp;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&nbsp;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&nbsp;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&nbsp;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&nbsp;</span>Defines</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">

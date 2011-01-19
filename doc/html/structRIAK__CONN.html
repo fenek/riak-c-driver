@@ -53,6 +53,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 <div class="contents">
 <!-- doxytag: class="RIAK_CONN" -->
+<p>Connection handle structure.  
+<a href="#_details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="riakdrv_8h_source.html">riakdrv.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr><td colspan="2"><h2><a name="pub-attribs"></a>
@@ -60,7 +63,11 @@ Data Fields</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRIAK__CONN.html#acdbc16cd5909783c8a43996bcfedde74">addr</a></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">CURL *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRIAK__CONN.html#a0c48f72b62d6eb51a7449c6fb3d93e3f">curlh</a></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRIAK__CONN.html#a2e3f4865323a6a35ef1b2bdccaaef497">socket</a></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRIAK__CONN.html#a45438c019b304f62a48fa4b7bd04c456">last_error</a></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRIAK__CONN.html#a81357b1e5540c2347a8d10af43146647">error_msg</a></td></tr>
 </table>
+<hr/><a name="_details"></a><h2>Detailed Description</h2>
+<p>Connection handle structure. </p>
 <hr/><h2>Field Documentation</h2>
 <a class="anchor" id="acdbc16cd5909783c8a43996bcfedde74"></a><!-- doxytag: member="RIAK_CONN::addr" ref="acdbc16cd5909783c8a43996bcfedde74" args="" -->
 <div class="memitem">
@@ -72,6 +79,7 @@ Data Fields</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Address of server for cURL in form: <a href="http://hostname:port">http://hostname:port</a> </p>
 
 </div>
 </div>
@@ -85,6 +93,35 @@ Data Fields</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>cURL handle </p>
+
+</div>
+</div>
+<a class="anchor" id="a81357b1e5540c2347a8d10af43146647"></a><!-- doxytag: member="RIAK_CONN::error_msg" ref="a81357b1e5540c2347a8d10af43146647" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char* <a class="el" href="structRIAK__CONN.html#a81357b1e5540c2347a8d10af43146647">RIAK_CONN::error_msg</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>Riak internal error message. Only some operations return this message. Format: "(err code in hex): err msg" </p>
+
+</div>
+</div>
+<a class="anchor" id="a45438c019b304f62a48fa4b7bd04c456"></a><!-- doxytag: member="RIAK_CONN::last_error" ref="a45438c019b304f62a48fa4b7bd04c456" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structRIAK__CONN.html#a45438c019b304f62a48fa4b7bd04c456">RIAK_CONN::last_error</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>Error code of last operation. Codes can be found in <a class="el" href="riakerrors_8h.html">riakerrors.h</a> </p>
 
 </div>
 </div>
@@ -98,6 +135,7 @@ Data Fields</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>Socket descriptor for Protocol Buffers connection </p>
 
 </div>
 </div>
@@ -110,7 +148,7 @@ Data Fields</h2></td></tr>
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&nbsp;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&nbsp;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&nbsp;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&nbsp;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&nbsp;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&nbsp;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&nbsp;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&nbsp;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&nbsp;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&nbsp;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&nbsp;</span>Defines</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">

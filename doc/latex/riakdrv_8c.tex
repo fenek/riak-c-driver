@@ -19,18 +19,20 @@ struct \hyperlink{structbuffered__char}{buffered\_\-char}
 \subsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
+void \hyperlink{riakdrv_8c_ad73478538b7df19e22214b1817277274}{riak\_\-copy\_\-error} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, RpbErrorResp $\ast$errorResp)
+\begin{DoxyCompactList}\small\item\em Helper function for copying error message from PB structure to \hyperlink{structRIAK__CONN}{RIAK\_\-CONN}. \item\end{DoxyCompactList}\item 
 \hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$ \hyperlink{riakdrv_8c_acc22345774338ad49b3139dc74e7e9e5}{riak\_\-init} (char $\ast$hostname, int pb\_\-port, int curl\_\-port, \hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct)
 \begin{DoxyCompactList}\small\item\em Create new handle. \item\end{DoxyCompactList}\item 
 int \hyperlink{riakdrv_8c_a8f4c5101059d0894aecbbfbbd3db680d}{riak\_\-exec\_\-op} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, \hyperlink{structRIAK__OP}{RIAK\_\-OP} $\ast$command, \hyperlink{structRIAK__OP}{RIAK\_\-OP} $\ast$result)
-\item 
+\begin{DoxyCompactList}\small\item\em Executes Riak operation via Protocol Buffers socket and receives response. \item\end{DoxyCompactList}\item 
 int \hyperlink{riakdrv_8c_a4afa67d57602fb8421d5e62a1fbafaf0}{riak\_\-ping} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct)
-\item 
-char $\ast$$\ast$ \hyperlink{riakdrv_8c_a974a652ca95fdfa26eb7bda6f1c0b08f}{riak\_\-list\_\-buckets} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, int $\ast$n\_\-buckets)
-\item 
+\begin{DoxyCompactList}\small\item\em Pings Riak server. \item\end{DoxyCompactList}\item 
+char $\ast$$\ast$ \hyperlink{riakdrv_8c_af9865799d076888929ec8f493b5ba849}{riak\_\-list\_\-buckets} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, int $\ast$n\_\-buckets)
+\begin{DoxyCompactList}\small\item\em Fetches list of buckets. \item\end{DoxyCompactList}\item 
 size\_\-t \hyperlink{riakdrv_8c_a7ea389a183b9921ce31d4994a307ef67}{readfunc} (void $\ast$ptr, size\_\-t size, size\_\-t nmemb, void $\ast$userdata)
-\item 
+\begin{DoxyCompactList}\small\item\em Helper function for cURL, reads data from buffer. \item\end{DoxyCompactList}\item 
 size\_\-t \hyperlink{riakdrv_8c_ab9f8a870e233a2768ff1b6a4af3a7362}{writefunc} (void $\ast$ptr, size\_\-t size, size\_\-t nmemb, void $\ast$userdata)
-\item 
+\begin{DoxyCompactList}\small\item\em Helper function for cURL, writes data to buffer. \item\end{DoxyCompactList}\item 
 void \hyperlink{riakdrv_8c_ad0615f1f92010db78712cd2a06ac5147}{riak\_\-put\_\-json} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, char $\ast$bucket, char $\ast$key, json\_\-object $\ast$elem)
 \item 
 json\_\-object $\ast$$\ast$ \hyperlink{riakdrv_8c_a6fc65357610dd512f9ebdba67d559e0d}{riak\_\-get\_\-json\_\-mapred} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, char $\ast$mapred\_\-statement, int $\ast$ret\_\-len)
@@ -61,6 +63,18 @@ int \hyperlink{riakdrv_8c_a2251ba55279aef307357d4b82d7cffb7}{first\_\-time} = 1
 \end{DoxyParamCaption}
 )}}
 \label{riakdrv_8c_a7ea389a183b9921ce31d4994a307ef67}
+
+
+Helper function for cURL, reads data from buffer. 
+
+This is helper function for cURL, which takes userdata and ptr (internal field where cURL stores data to be sent) and then copies contents of userdata to ptr. This function assumes that userdata is of type struct \hyperlink{structbuffered__char}{buffered\_\-char}.
+
+
+\begin{DoxyParams}{Parameters}
+\item[{\em ptr}]internal cURL location \item[{\em size}]size of one data piece \item[{\em nmemb}]count of data pieces \item[{\em userdata}]structure from which data should be read\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+amount of data copied 
+\end{DoxyReturn}
 \hypertarget{riakdrv_8c_ac2cbf23402be266af0dbc121819276ca}{
 \index{riakdrv.c@{riakdrv.c}!riak\_\-close@{riak\_\-close}}
 \index{riak\_\-close@{riak\_\-close}!riakdrv.c@{riakdrv.c}}
@@ -79,6 +93,25 @@ This function ends cURL session, closes TCP socket and frees connstruct, so this
 
 \begin{DoxyParams}{Parameters}
 \item[{\em connstruct}]connection structure to be closed and freed. \end{DoxyParams}
+\hypertarget{riakdrv_8c_ad73478538b7df19e22214b1817277274}{
+\index{riakdrv.c@{riakdrv.c}!riak\_\-copy\_\-error@{riak\_\-copy\_\-error}}
+\index{riak\_\-copy\_\-error@{riak\_\-copy\_\-error}!riakdrv.c@{riakdrv.c}}
+\subsubsection[{riak\_\-copy\_\-error}]{\setlength{\rightskip}{0pt plus 5cm}void riak\_\-copy\_\-error (
+\begin{DoxyParamCaption}
+\item[{{\bf RIAK\_\-CONN} $\ast$}]{ connstruct, }
+\item[{RpbErrorResp $\ast$}]{ errorResp}
+\end{DoxyParamCaption}
+)}}
+\label{riakdrv_8c_ad73478538b7df19e22214b1817277274}
+
+
+Helper function for copying error message from PB structure to \hyperlink{structRIAK__CONN}{RIAK\_\-CONN}. 
+
+Simple function that copies error description from RpbErrorResp to \hyperlink{structRIAK__CONN}{RIAK\_\-CONN} in such way, that \hyperlink{structRIAK__CONN_a81357b1e5540c2347a8d10af43146647}{RIAK\_\-CONN.error\_\-msg} is cleared (if not NULL) and then error message is allocated to it. Message has following format: \char`\"{}($<$Riak error code in hex$>$): $<$Riak error message$>$\char`\"{}.
+
+
+\begin{DoxyParams}{Parameters}
+\item[{\em connstruct}]Riak connection handle \item[{\em errorResp}]Protocol Buffers structure containing Riak error response \end{DoxyParams}
 \hypertarget{riakdrv_8c_a8f4c5101059d0894aecbbfbbd3db680d}{
 \index{riakdrv.c@{riakdrv.c}!riak\_\-exec\_\-op@{riak\_\-exec\_\-op}}
 \index{riak\_\-exec\_\-op@{riak\_\-exec\_\-op}!riakdrv.c@{riakdrv.c}}
@@ -90,6 +123,18 @@ This function ends cURL session, closes TCP socket and frees connstruct, so this
 \end{DoxyParamCaption}
 )}}
 \label{riakdrv_8c_a8f4c5101059d0894aecbbfbbd3db680d}
+
+
+Executes Riak operation via Protocol Buffers socket and receives response. 
+
+This is universal function for executing Riak operations and receiving responses. It is a wrapper for socket operations. Ultimately, user shouldn't have to use this function because other functions are to cover all possible operations. Still, probably this function will remain in library API even then.
+
+
+\begin{DoxyParams}{Parameters}
+\item[{\em connstruct}]connection handle \item[{\em command}]command to be sent to Riak \item[{\em result}]structure for response; this function won't allocate space and won't check if result structure exists!\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 if success, error code $>$ 0 when failure 
+\end{DoxyReturn}
 \hypertarget{riakdrv_8c_a6fc65357610dd512f9ebdba67d559e0d}{
 \index{riakdrv.c@{riakdrv.c}!riak\_\-get\_\-json\_\-mapred@{riak\_\-get\_\-json\_\-mapred}}
 \index{riak\_\-get\_\-json\_\-mapred@{riak\_\-get\_\-json\_\-mapred}!riakdrv.c@{riakdrv.c}}
@@ -146,18 +191,30 @@ WARNING! If connstruct!=NULL, this function will assume that it doesn't describe
 \begin{DoxyParams}{Parameters}
 \item[{\em hostname}]string containing address where Riak server can be accessed, e.g. 127.0.0.1 \item[{\em pb\_\-port}]port where Protocol Buffers API is available, e.g. 8087; may be 0, in such case PB operations won't be available \item[{\em curl\_\-port}]port where HTTP server is available, e.g. 8089; may be 0, in such case HTTP operations won't be available \item[{\em connstruct}]structure for holding Riak connection data; when NULL -\/ new structure will be allocated\end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-handle to Riak connection; if connstruct != NULL, then connstruct is returned 
+handle to Riak connection; if connstruct != NULL, then connstruct is returned; returns NULL on error 
 \end{DoxyReturn}
-\hypertarget{riakdrv_8c_a974a652ca95fdfa26eb7bda6f1c0b08f}{
+\hypertarget{riakdrv_8c_af9865799d076888929ec8f493b5ba849}{
 \index{riakdrv.c@{riakdrv.c}!riak\_\-list\_\-buckets@{riak\_\-list\_\-buckets}}
 \index{riak\_\-list\_\-buckets@{riak\_\-list\_\-buckets}!riakdrv.c@{riakdrv.c}}
-\subsubsection[{riak\_\-list\_\-buckets}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$$\ast$ riak\_\-list\_\-buckets (
+\subsubsection[{riak\_\-list\_\-buckets}]{\setlength{\rightskip}{0pt plus 5cm}char $\ast$$\ast$ riak\_\-list\_\-buckets (
 \begin{DoxyParamCaption}
 \item[{{\bf RIAK\_\-CONN} $\ast$}]{ connstruct, }
 \item[{int $\ast$}]{ n\_\-buckets}
 \end{DoxyParamCaption}
 )}}
-\label{riakdrv_8c_a974a652ca95fdfa26eb7bda6f1c0b08f}
+\label{riakdrv_8c_af9865799d076888929ec8f493b5ba849}
+
+
+Fetches list of buckets. 
+
+This function sends list buckets request to Riak and returns array of null-\/terminated strings containing names of all buckets. This array is not managed later so user should take care of freeing it after usage!
+
+
+\begin{DoxyParams}{Parameters}
+\item[{\em connstruct}]connection handle \item[{\em n\_\-buckets}]pointer to integer, where bucket count will be written\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+array (of n\_\-buckets length) of null-\/terminated strings; NULL on error 
+\end{DoxyReturn}
 \hypertarget{riakdrv_8c_a4afa67d57602fb8421d5e62a1fbafaf0}{
 \index{riakdrv.c@{riakdrv.c}!riak\_\-ping@{riak\_\-ping}}
 \index{riak\_\-ping@{riak\_\-ping}!riakdrv.c@{riakdrv.c}}
@@ -167,6 +224,18 @@ handle to Riak connection; if connstruct != NULL, then connstruct is returned
 \end{DoxyParamCaption}
 )}}
 \label{riakdrv_8c_a4afa67d57602fb8421d5e62a1fbafaf0}
+
+
+Pings Riak server. 
+
+Sends ping request to Riak via Protocol Buffers.
+
+
+\begin{DoxyParams}{Parameters}
+\item[{\em connstruct}]connection handle\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 if success, not 0 on error 
+\end{DoxyReturn}
 \hypertarget{riakdrv_8c_ad0615f1f92010db78712cd2a06ac5147}{
 \index{riakdrv.c@{riakdrv.c}!riak\_\-put\_\-json@{riak\_\-put\_\-json}}
 \index{riak\_\-put\_\-json@{riak\_\-put\_\-json}!riakdrv.c@{riakdrv.c}}
@@ -191,6 +260,18 @@ handle to Riak connection; if connstruct != NULL, then connstruct is returned
 \end{DoxyParamCaption}
 )}}
 \label{riakdrv_8c_ab9f8a870e233a2768ff1b6a4af3a7362}
+
+
+Helper function for cURL, writes data to buffer. 
+
+This is helper function for cURL, which takes userdata and ptr (internal field where cURL stores data received) and then copies contents of ptr to userdata. This function assumes that userdata is of type struct \hyperlink{structbuffered__char}{buffered\_\-char}.
+
+
+\begin{DoxyParams}{Parameters}
+\item[{\em ptr}]internal cURL location \item[{\em size}]size of one data piece \item[{\em nmemb}]count of data pieces \item[{\em userdata}]structure to which data should be read\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+amount of data copied 
+\end{DoxyReturn}
 
 
 \subsection{Variable Documentation}

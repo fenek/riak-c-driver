@@ -68,13 +68,20 @@ Data Structures</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">struct &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structbuffered__char.html">buffered_char</a></td></tr>
 <tr><td colspan="2"><h2><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8c.html#ad73478538b7df19e22214b1817277274">riak_copy_error</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, RpbErrorResp *errorResp)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Helper function for copying error message from PB structure to <a class="el" href="structRIAK__CONN.html" title="Connection handle structure.">RIAK_CONN</a>.  <a href="#ad73478538b7df19e22214b1817277274"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8c.html#acc22345774338ad49b3139dc74e7e9e5">riak_init</a> (char *hostname, int pb_port, int curl_port, <a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create new handle.  <a href="#acc22345774338ad49b3139dc74e7e9e5"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8c.html#a8f4c5101059d0894aecbbfbbd3db680d">riak_exec_op</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, <a class="el" href="structRIAK__OP.html">RIAK_OP</a> *command, <a class="el" href="structRIAK__OP.html">RIAK_OP</a> *result)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Executes Riak operation via Protocol Buffers socket and receives response.  <a href="#a8f4c5101059d0894aecbbfbbd3db680d"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8c.html#a4afa67d57602fb8421d5e62a1fbafaf0">riak_ping</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">char **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8c.html#a974a652ca95fdfa26eb7bda6f1c0b08f">riak_list_buckets</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, int *n_buckets)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Pings Riak server.  <a href="#a4afa67d57602fb8421d5e62a1fbafaf0"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">char **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8c.html#af9865799d076888929ec8f493b5ba849">riak_list_buckets</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, int *n_buckets)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Fetches list of buckets.  <a href="#af9865799d076888929ec8f493b5ba849"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">size_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8c.html#a7ea389a183b9921ce31d4994a307ef67">readfunc</a> (void *ptr, size_t size, size_t nmemb, void *userdata)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Helper function for cURL, reads data from buffer.  <a href="#a7ea389a183b9921ce31d4994a307ef67"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">size_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8c.html#ab9f8a870e233a2768ff1b6a4af3a7362">writefunc</a> (void *ptr, size_t size, size_t nmemb, void *userdata)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Helper function for cURL, writes data to buffer.  <a href="#ab9f8a870e233a2768ff1b6a4af3a7362"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8c.html#ad0615f1f92010db78712cd2a06ac5147">riak_put_json</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, char *bucket, char *key, json_object *elem)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">json_object **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8c.html#a6fc65357610dd512f9ebdba67d559e0d">riak_get_json_mapred</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, char *mapred_statement, int *ret_len)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">json_object **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8c.html#ae5963885b42dac3fe0d840f20f38aebd">riak_get_json_rs</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, char *mapred_statement, int *ret_len)</td></tr>
@@ -123,6 +130,19 @@ Variables</h2></td></tr>
 </div>
 <div class="memdoc">
 
+<p>Helper function for cURL, reads data from buffer. </p>
+<p>This is helper function for cURL, which takes userdata and ptr (internal field where cURL stores data to be sent) and then copies contents of userdata to ptr. This function assumes that userdata is of type struct <a class="el" href="structbuffered__char.html">buffered_char</a>.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>ptr</em>&nbsp;</td><td>internal cURL location </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>size</em>&nbsp;</td><td>size of one data piece </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>nmemb</em>&nbsp;</td><td>count of data pieces </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>userdata</em>&nbsp;</td><td>structure from which data should be read</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>amount of data copied </dd></dl>
+
 </div>
 </div>
 <a class="anchor" id="ac2cbf23402be266af0dbc121819276ca"></a><!-- doxytag: member="riakdrv.c::riak_close" ref="ac2cbf23402be266af0dbc121819276ca" args="(RIAK_CONN *connstruct)" -->
@@ -146,6 +166,43 @@ Variables</h2></td></tr>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>connstruct</em>&nbsp;</td><td>connection structure to be closed and freed. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ad73478538b7df19e22214b1817277274"></a><!-- doxytag: member="riakdrv.c::riak_copy_error" ref="ad73478538b7df19e22214b1817277274" args="(RIAK_CONN *connstruct, RpbErrorResp *errorResp)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void riak_copy_error </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *&nbsp;</td>
+          <td class="paramname"> <em>connstruct</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">RpbErrorResp *&nbsp;</td>
+          <td class="paramname"> <em>errorResp</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Helper function for copying error message from PB structure to <a class="el" href="structRIAK__CONN.html" title="Connection handle structure.">RIAK_CONN</a>. </p>
+<p>Simple function that copies error description from RpbErrorResp to <a class="el" href="structRIAK__CONN.html" title="Connection handle structure.">RIAK_CONN</a> in such way, that <a class="el" href="structRIAK__CONN.html#a81357b1e5540c2347a8d10af43146647">RIAK_CONN.error_msg</a> is cleared (if not NULL) and then error message is allocated to it. Message has following format: "(&lt;Riak error code in hex&gt;): &lt;Riak error message&gt;".</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>connstruct</em>&nbsp;</td><td>Riak connection handle </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>errorResp</em>&nbsp;</td><td>Protocol Buffers structure containing Riak error response </td></tr>
   </table>
   </dd>
 </dl>
@@ -182,6 +239,18 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+
+<p>Executes Riak operation via Protocol Buffers socket and receives response. </p>
+<p>This is universal function for executing Riak operations and receiving responses. It is a wrapper for socket operations. Ultimately, user shouldn't have to use this function because other functions are to cover all possible operations. Still, probably this function will remain in library API even then.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>connstruct</em>&nbsp;</td><td>connection handle </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>command</em>&nbsp;</td><td>command to be sent to Riak </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>result</em>&nbsp;</td><td>structure for response; this function won't allocate space and won't check if result structure exists!</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if success, error code &gt; 0 when failure </dd></dl>
 
 </div>
 </div>
@@ -327,16 +396,16 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="return"><dt><b>Returns:</b></dt><dd>handle to Riak connection; if connstruct != NULL, then connstruct is returned </dd></dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>handle to Riak connection; if connstruct != NULL, then connstruct is returned; returns NULL on error </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a974a652ca95fdfa26eb7bda6f1c0b08f"></a><!-- doxytag: member="riakdrv.c::riak_list_buckets" ref="a974a652ca95fdfa26eb7bda6f1c0b08f" args="(RIAK_CONN *connstruct, int *n_buckets)" -->
+<a class="anchor" id="af9865799d076888929ec8f493b5ba849"></a><!-- doxytag: member="riakdrv.c::riak_list_buckets" ref="af9865799d076888929ec8f493b5ba849" args="(RIAK_CONN *connstruct, int *n_buckets)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">char** riak_list_buckets </td>
+          <td class="memname">char ** riak_list_buckets </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *&nbsp;</td>
           <td class="paramname"> <em>connstruct</em>, </td>
@@ -356,6 +425,17 @@ Variables</h2></td></tr>
 </div>
 <div class="memdoc">
 
+<p>Fetches list of buckets. </p>
+<p>This function sends list buckets request to Riak and returns array of null-terminated strings containing names of all buckets. This array is not managed later so user should take care of freeing it after usage!</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>connstruct</em>&nbsp;</td><td>connection handle </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>n_buckets</em>&nbsp;</td><td>pointer to integer, where bucket count will be written</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>array (of n_buckets length) of null-terminated strings; NULL on error </dd></dl>
+
 </div>
 </div>
 <a class="anchor" id="a4afa67d57602fb8421d5e62a1fbafaf0"></a><!-- doxytag: member="riakdrv.c::riak_ping" ref="a4afa67d57602fb8421d5e62a1fbafaf0" args="(RIAK_CONN *connstruct)" -->
@@ -373,6 +453,16 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+
+<p>Pings Riak server. </p>
+<p>Sends ping request to Riak via Protocol Buffers.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>connstruct</em>&nbsp;</td><td>connection handle</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 if success, not 0 on error </dd></dl>
 
 </div>
 </div>
@@ -452,6 +542,19 @@ Variables</h2></td></tr>
 </div>
 <div class="memdoc">
 
+<p>Helper function for cURL, writes data to buffer. </p>
+<p>This is helper function for cURL, which takes userdata and ptr (internal field where cURL stores data received) and then copies contents of ptr to userdata. This function assumes that userdata is of type struct <a class="el" href="structbuffered__char.html">buffered_char</a>.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>ptr</em>&nbsp;</td><td>internal cURL location </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>size</em>&nbsp;</td><td>size of one data piece </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>nmemb</em>&nbsp;</td><td>count of data pieces </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>userdata</em>&nbsp;</td><td>structure to which data should be read</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>amount of data copied </dd></dl>
+
 </div>
 </div>
 <hr/><h2>Variable Documentation</h2>
@@ -474,7 +577,7 @@ Variables</h2></td></tr>
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&nbsp;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&nbsp;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&nbsp;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&nbsp;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&nbsp;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&nbsp;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&nbsp;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&nbsp;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&nbsp;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&nbsp;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&nbsp;</span>Defines</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">

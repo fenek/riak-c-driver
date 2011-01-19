@@ -5,24 +5,25 @@
 {\ttfamily \#include $<$json/json\_\-object.h$>$}\par
 {\ttfamily \#include $<$sys/types.h$>$}\par
 {\ttfamily \#include $<$curl/curl.h$>$}\par
+{\ttfamily \#include \char`\"{}riakerrors.h\char`\"{}}\par
 \subsection*{Data Structures}
 \begin{DoxyCompactItemize}
 \item 
 struct \hyperlink{structRIAK__CONN}{RIAK\_\-CONN}
-\item 
+\begin{DoxyCompactList}\small\item\em Connection handle structure. \item\end{DoxyCompactList}\item 
 struct \hyperlink{structRIAK__OP}{RIAK\_\-OP}
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Riak operation structure. \item\end{DoxyCompactList}\end{DoxyCompactItemize}
 \subsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
 \hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$ \hyperlink{riakdrv_8h_a9b18372e8fb2d6be369fd1746567e82c}{riak\_\-init} (char $\ast$hostname, int pb\_\-port, int curl\_\-port, \hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct)
 \begin{DoxyCompactList}\small\item\em Create new handle. \item\end{DoxyCompactList}\item 
 int \hyperlink{riakdrv_8h_a8f4c5101059d0894aecbbfbbd3db680d}{riak\_\-exec\_\-op} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, \hyperlink{structRIAK__OP}{RIAK\_\-OP} $\ast$command, \hyperlink{structRIAK__OP}{RIAK\_\-OP} $\ast$result)
-\item 
+\begin{DoxyCompactList}\small\item\em Executes Riak operation via Protocol Buffers socket and receives response. \item\end{DoxyCompactList}\item 
 int \hyperlink{riakdrv_8h_a4afa67d57602fb8421d5e62a1fbafaf0}{riak\_\-ping} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct)
-\item 
+\begin{DoxyCompactList}\small\item\em Pings Riak server. \item\end{DoxyCompactList}\item 
 char $\ast$$\ast$ \hyperlink{riakdrv_8h_a974a652ca95fdfa26eb7bda6f1c0b08f}{riak\_\-list\_\-buckets} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, int $\ast$n\_\-buckets)
-\item 
+\begin{DoxyCompactList}\small\item\em Fetches list of buckets. \item\end{DoxyCompactList}\item 
 void \hyperlink{riakdrv_8h_ad0615f1f92010db78712cd2a06ac5147}{riak\_\-put\_\-json} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, char $\ast$bucket, char $\ast$key, json\_\-object $\ast$elem)
 \item 
 json\_\-object $\ast$$\ast$ \hyperlink{riakdrv_8h_a6fc65357610dd512f9ebdba67d559e0d}{riak\_\-get\_\-json\_\-mapred} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, char $\ast$mapred\_\-statement, int $\ast$ret\_\-len)
@@ -65,6 +66,18 @@ This function ends cURL session, closes TCP socket and frees connstruct, so this
 \end{DoxyParamCaption}
 )}}
 \label{riakdrv_8h_a8f4c5101059d0894aecbbfbbd3db680d}
+
+
+Executes Riak operation via Protocol Buffers socket and receives response. 
+
+This is universal function for executing Riak operations and receiving responses. It is a wrapper for socket operations. Ultimately, user shouldn't have to use this function because other functions are to cover all possible operations. Still, probably this function will remain in library API even then.
+
+
+\begin{DoxyParams}{Parameters}
+\item[{\em connstruct}]connection handle \item[{\em command}]command to be sent to Riak \item[{\em result}]structure for response; this function won't allocate space and won't check if result structure exists!\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 if success, error code $>$ 0 when failure 
+\end{DoxyReturn}
 \hypertarget{riakdrv_8h_a6fc65357610dd512f9ebdba67d559e0d}{
 \index{riakdrv.h@{riakdrv.h}!riak\_\-get\_\-json\_\-mapred@{riak\_\-get\_\-json\_\-mapred}}
 \index{riak\_\-get\_\-json\_\-mapred@{riak\_\-get\_\-json\_\-mapred}!riakdrv.h@{riakdrv.h}}
@@ -121,7 +134,7 @@ WARNING! If connstruct!=NULL, this function will assume that it doesn't describe
 \begin{DoxyParams}{Parameters}
 \item[{\em hostname}]string containing address where Riak server can be accessed, e.g. 127.0.0.1 \item[{\em pb\_\-port}]port where Protocol Buffers API is available, e.g. 8087; may be 0, in such case PB operations won't be available \item[{\em curl\_\-port}]port where HTTP server is available, e.g. 8089; may be 0, in such case HTTP operations won't be available \item[{\em connstruct}]structure for holding Riak connection data; when NULL -\/ new structure will be allocated\end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-handle to Riak connection; if connstruct != NULL, then connstruct is returned 
+handle to Riak connection; if connstruct != NULL, then connstruct is returned; returns NULL on error 
 \end{DoxyReturn}
 \hypertarget{riakdrv_8h_a974a652ca95fdfa26eb7bda6f1c0b08f}{
 \index{riakdrv.h@{riakdrv.h}!riak\_\-list\_\-buckets@{riak\_\-list\_\-buckets}}
@@ -133,6 +146,18 @@ handle to Riak connection; if connstruct != NULL, then connstruct is returned
 \end{DoxyParamCaption}
 )}}
 \label{riakdrv_8h_a974a652ca95fdfa26eb7bda6f1c0b08f}
+
+
+Fetches list of buckets. 
+
+This function sends list buckets request to Riak and returns array of null-\/terminated strings containing names of all buckets. This array is not managed later so user should take care of freeing it after usage!
+
+
+\begin{DoxyParams}{Parameters}
+\item[{\em connstruct}]connection handle \item[{\em n\_\-buckets}]pointer to integer, where bucket count will be written\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+array (of n\_\-buckets length) of null-\/terminated strings; NULL on error 
+\end{DoxyReturn}
 \hypertarget{riakdrv_8h_a4afa67d57602fb8421d5e62a1fbafaf0}{
 \index{riakdrv.h@{riakdrv.h}!riak\_\-ping@{riak\_\-ping}}
 \index{riak\_\-ping@{riak\_\-ping}!riakdrv.h@{riakdrv.h}}
@@ -142,6 +167,18 @@ handle to Riak connection; if connstruct != NULL, then connstruct is returned
 \end{DoxyParamCaption}
 )}}
 \label{riakdrv_8h_a4afa67d57602fb8421d5e62a1fbafaf0}
+
+
+Pings Riak server. 
+
+Sends ping request to Riak via Protocol Buffers.
+
+
+\begin{DoxyParams}{Parameters}
+\item[{\em connstruct}]connection handle\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+0 if success, not 0 on error 
+\end{DoxyReturn}
 \hypertarget{riakdrv_8h_ad0615f1f92010db78712cd2a06ac5147}{
 \index{riakdrv.h@{riakdrv.h}!riak\_\-put\_\-json@{riak\_\-put\_\-json}}
 \index{riak\_\-put\_\-json@{riak\_\-put\_\-json}!riakdrv.h@{riakdrv.h}}

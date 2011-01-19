@@ -64,38 +64,42 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00014"></a>00014 <span class="preprocessor">#include &lt;sys/types.h&gt;</span>
 <a name="l00015"></a>00015 <span class="preprocessor">#include &lt;curl/curl.h&gt;</span>
 <a name="l00016"></a>00016 
-<a name="l00017"></a>00017 <span class="comment">/* --------------------------- STRUCTURE DEFINITIONS --------------------------- */</span>
+<a name="l00017"></a>00017 <span class="preprocessor">#include &quot;<a class="code" href="riakerrors_8h.html">riakerrors.h</a>&quot;</span>
 <a name="l00018"></a>00018 
-<a name="l00019"></a><a class="code" href="structRIAK__CONN.html">00019</a> <span class="keyword">typedef</span> <span class="keyword">struct </span>{
-<a name="l00020"></a><a class="code" href="structRIAK__CONN.html#acdbc16cd5909783c8a43996bcfedde74">00020</a>         <span class="keywordtype">char</span> * addr;
-<a name="l00021"></a><a class="code" href="structRIAK__CONN.html#a0c48f72b62d6eb51a7449c6fb3d93e3f">00021</a>         CURL * curlh;
-<a name="l00022"></a><a class="code" href="structRIAK__CONN.html#a2e3f4865323a6a35ef1b2bdccaaef497">00022</a>         <span class="keywordtype">int</span> socket;
-<a name="l00023"></a>00023 } <a class="code" href="structRIAK__CONN.html">RIAK_CONN</a>;
-<a name="l00024"></a>00024 
-<a name="l00025"></a><a class="code" href="structRIAK__OP.html">00025</a> <span class="keyword">typedef</span> <span class="keyword">struct </span>{
-<a name="l00026"></a><a class="code" href="structRIAK__OP.html#ad9a9ebef38f4c35c0cb13f331bb817b8">00026</a>         __uint32_t length;
-<a name="l00027"></a><a class="code" href="structRIAK__OP.html#abde5e88f658ba818a8b083d8927fc59f">00027</a>         __uint8_t msgcode;
-<a name="l00028"></a><a class="code" href="structRIAK__OP.html#ab3584d73e5c9a8486ee78b239a35d151">00028</a>         <span class="keywordtype">char</span> * msg;
-<a name="l00029"></a>00029 } <a class="code" href="structRIAK__OP.html">RIAK_OP</a>;
-<a name="l00030"></a>00030 
-<a name="l00031"></a>00031 <span class="comment">/* --------------------------- FUNCTIONS DEFINITIONS --------------------------- */</span>
-<a name="l00032"></a>00032 
-<a name="l00050"></a>00050 <a class="code" href="structRIAK__CONN.html">RIAK_CONN</a> * <a class="code" href="riakdrv_8c.html#acc22345774338ad49b3139dc74e7e9e5" title="Create new handle.">riak_init</a>(<span class="keywordtype">char</span> * hostname, <span class="keywordtype">int</span> pb_port, <span class="keywordtype">int</span> curl_port, <a class="code" href="structRIAK__CONN.html">RIAK_CONN</a> * connstruct);
-<a name="l00051"></a>00051 
-<a name="l00052"></a>00052 <span class="keywordtype">int</span> <a class="code" href="riakdrv_8c.html#a8f4c5101059d0894aecbbfbbd3db680d">riak_exec_op</a>(<a class="code" href="structRIAK__CONN.html">RIAK_CONN</a> * connstruct, <a class="code" href="structRIAK__OP.html">RIAK_OP</a> * command, <a class="code" href="structRIAK__OP.html">RIAK_OP</a> * result);
-<a name="l00053"></a>00053 
-<a name="l00054"></a>00054 <span class="keywordtype">int</span> <a class="code" href="riakdrv_8c.html#a4afa67d57602fb8421d5e62a1fbafaf0">riak_ping</a>(<a class="code" href="structRIAK__CONN.html">RIAK_CONN</a> * connstruct);
-<a name="l00055"></a>00055 
-<a name="l00056"></a>00056 <span class="keywordtype">char</span> ** <a class="code" href="riakdrv_8c.html#a974a652ca95fdfa26eb7bda6f1c0b08f">riak_list_buckets</a>(<a class="code" href="structRIAK__CONN.html">RIAK_CONN</a> * connstruct, <span class="keywordtype">int</span> * n_buckets);
-<a name="l00057"></a>00057 
-<a name="l00068"></a>00068 <span class="keywordtype">void</span> <a class="code" href="riakdrv_8c.html#ad0615f1f92010db78712cd2a06ac5147">riak_put_json</a>(<a class="code" href="structRIAK__CONN.html">RIAK_CONN</a> * connstruct, <span class="keywordtype">char</span> * bucket, <span class="keywordtype">char</span> * key, json_object * elem);
-<a name="l00069"></a>00069 json_object ** <a class="code" href="riakdrv_8c.html#a6fc65357610dd512f9ebdba67d559e0d">riak_get_json_mapred</a>(<a class="code" href="structRIAK__CONN.html">RIAK_CONN</a> * connstruct, <span class="keywordtype">char</span> * mapred_statement, <span class="keywordtype">int</span> *ret_len);
-<a name="l00070"></a>00070 json_object ** <a class="code" href="riakdrv_8c.html#ae5963885b42dac3fe0d840f20f38aebd">riak_get_json_rs</a>(<a class="code" href="structRIAK__CONN.html">RIAK_CONN</a> * connstruct, <span class="keywordtype">char</span> * query, <span class="keywordtype">int</span> *ret_len); <span class="comment">/* NOT IMPLEMENTED */</span>
-<a name="l00071"></a>00071 <span class="keywordtype">char</span> * <a class="code" href="riakdrv_8c.html#ab267dbfa3510535367f80bfcef4768f3">riak_get_raw_rs</a>(<a class="code" href="structRIAK__CONN.html">RIAK_CONN</a> * connstruct, <span class="keywordtype">char</span> * query);
-<a name="l00072"></a>00072 
-<a name="l00081"></a>00081 <span class="keywordtype">void</span> <a class="code" href="riakdrv_8c.html#ac2cbf23402be266af0dbc121819276ca" title="Closes connection to Riak.">riak_close</a>(<a class="code" href="structRIAK__CONN.html">RIAK_CONN</a> * connstruct);
-<a name="l00082"></a>00082 
-<a name="l00083"></a>00083 <span class="preprocessor">#endif</span>
+<a name="l00019"></a>00019 <span class="comment">/* --------------------------- STRUCTURE DEFINITIONS --------------------------- */</span>
+<a name="l00020"></a>00020 
+<a name="l00024"></a><a class="code" href="structRIAK__CONN.html">00024</a> <span class="keyword">typedef</span> <span class="keyword">struct </span>{
+<a name="l00026"></a><a class="code" href="structRIAK__CONN.html#acdbc16cd5909783c8a43996bcfedde74">00026</a>         <span class="keywordtype">char</span> * addr;
+<a name="l00028"></a><a class="code" href="structRIAK__CONN.html#a0c48f72b62d6eb51a7449c6fb3d93e3f">00028</a>         CURL * curlh;
+<a name="l00030"></a><a class="code" href="structRIAK__CONN.html#a2e3f4865323a6a35ef1b2bdccaaef497">00030</a>         <span class="keywordtype">int</span> socket;
+<a name="l00032"></a><a class="code" href="structRIAK__CONN.html#a45438c019b304f62a48fa4b7bd04c456">00032</a>         <span class="keywordtype">int</span> last_error;
+<a name="l00034"></a><a class="code" href="structRIAK__CONN.html#a81357b1e5540c2347a8d10af43146647">00034</a>         <span class="keywordtype">char</span> * error_msg;
+<a name="l00035"></a>00035 } <a class="code" href="structRIAK__CONN.html" title="Connection handle structure.">RIAK_CONN</a>;
+<a name="l00036"></a>00036 
+<a name="l00042"></a><a class="code" href="structRIAK__OP.html">00042</a> <span class="keyword">typedef</span> <span class="keyword">struct </span>{
+<a name="l00044"></a><a class="code" href="structRIAK__OP.html#ad9a9ebef38f4c35c0cb13f331bb817b8">00044</a>         __uint32_t length;
+<a name="l00046"></a><a class="code" href="structRIAK__OP.html#abde5e88f658ba818a8b083d8927fc59f">00046</a>         __uint8_t msgcode;
+<a name="l00048"></a><a class="code" href="structRIAK__OP.html#ab3584d73e5c9a8486ee78b239a35d151">00048</a>         <span class="keywordtype">char</span> * msg;
+<a name="l00049"></a>00049 } <a class="code" href="structRIAK__OP.html" title="Riak operation structure.">RIAK_OP</a>;
+<a name="l00050"></a>00050 
+<a name="l00051"></a>00051 <span class="comment">/* --------------------------- FUNCTIONS DEFINITIONS --------------------------- */</span>
+<a name="l00052"></a>00052 
+<a name="l00070"></a>00070 <a class="code" href="structRIAK__CONN.html" title="Connection handle structure.">RIAK_CONN</a> * <a class="code" href="riakdrv_8c.html#acc22345774338ad49b3139dc74e7e9e5" title="Create new handle.">riak_init</a>(<span class="keywordtype">char</span> * hostname, <span class="keywordtype">int</span> pb_port, <span class="keywordtype">int</span> curl_port, <a class="code" href="structRIAK__CONN.html" title="Connection handle structure.">RIAK_CONN</a> * connstruct);
+<a name="l00071"></a>00071 
+<a name="l00085"></a>00085 <span class="keywordtype">int</span> <a class="code" href="riakdrv_8c.html#a8f4c5101059d0894aecbbfbbd3db680d" title="Executes Riak operation via Protocol Buffers socket and receives response.">riak_exec_op</a>(<a class="code" href="structRIAK__CONN.html" title="Connection handle structure.">RIAK_CONN</a> * connstruct, <a class="code" href="structRIAK__OP.html" title="Riak operation structure.">RIAK_OP</a> * command, <a class="code" href="structRIAK__OP.html" title="Riak operation structure.">RIAK_OP</a> * result);
+<a name="l00086"></a>00086 
+<a name="l00096"></a>00096 <span class="keywordtype">int</span> <a class="code" href="riakdrv_8c.html#a4afa67d57602fb8421d5e62a1fbafaf0" title="Pings Riak server.">riak_ping</a>(<a class="code" href="structRIAK__CONN.html" title="Connection handle structure.">RIAK_CONN</a> * connstruct);
+<a name="l00097"></a>00097 
+<a name="l00109"></a>00109 <span class="keywordtype">char</span> ** <a class="code" href="riakdrv_8c.html#af9865799d076888929ec8f493b5ba849" title="Fetches list of buckets.">riak_list_buckets</a>(<a class="code" href="structRIAK__CONN.html" title="Connection handle structure.">RIAK_CONN</a> * connstruct, <span class="keywordtype">int</span> * n_buckets);
+<a name="l00110"></a>00110 
+<a name="l00121"></a>00121 <span class="keywordtype">void</span> <a class="code" href="riakdrv_8c.html#ad0615f1f92010db78712cd2a06ac5147">riak_put_json</a>(<a class="code" href="structRIAK__CONN.html" title="Connection handle structure.">RIAK_CONN</a> * connstruct, <span class="keywordtype">char</span> * bucket, <span class="keywordtype">char</span> * key, json_object * elem);
+<a name="l00122"></a>00122 json_object ** <a class="code" href="riakdrv_8c.html#a6fc65357610dd512f9ebdba67d559e0d">riak_get_json_mapred</a>(<a class="code" href="structRIAK__CONN.html" title="Connection handle structure.">RIAK_CONN</a> * connstruct, <span class="keywordtype">char</span> * mapred_statement, <span class="keywordtype">int</span> *ret_len);
+<a name="l00123"></a>00123 json_object ** <a class="code" href="riakdrv_8c.html#ae5963885b42dac3fe0d840f20f38aebd">riak_get_json_rs</a>(<a class="code" href="structRIAK__CONN.html" title="Connection handle structure.">RIAK_CONN</a> * connstruct, <span class="keywordtype">char</span> * query, <span class="keywordtype">int</span> *ret_len); <span class="comment">/* NOT IMPLEMENTED */</span>
+<a name="l00124"></a>00124 <span class="keywordtype">char</span> * <a class="code" href="riakdrv_8c.html#ab267dbfa3510535367f80bfcef4768f3">riak_get_raw_rs</a>(<a class="code" href="structRIAK__CONN.html" title="Connection handle structure.">RIAK_CONN</a> * connstruct, <span class="keywordtype">char</span> * query);
+<a name="l00125"></a>00125 
+<a name="l00134"></a>00134 <span class="keywordtype">void</span> <a class="code" href="riakdrv_8c.html#ac2cbf23402be266af0dbc121819276ca" title="Closes connection to Riak.">riak_close</a>(<a class="code" href="structRIAK__CONN.html" title="Connection handle structure.">RIAK_CONN</a> * connstruct);
+<a name="l00135"></a>00135 
+<a name="l00136"></a>00136 <span class="preprocessor">#endif</span>
 </pre></div></div>
 </div>
 <!--- window showing the filter options -->
@@ -103,7 +107,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&nbsp;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&nbsp;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&nbsp;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&nbsp;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&nbsp;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&nbsp;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&nbsp;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&nbsp;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&nbsp;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&nbsp;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&nbsp;</span>Defines</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">

@@ -4,6 +4,11 @@
 }
 
 
+Connection handle structure.  
+
+
+
+
 {\ttfamily \#include $<$riakdrv.h$>$}
 
 \subsection*{Data Fields}
@@ -14,8 +19,15 @@ char $\ast$ \hyperlink{structRIAK__CONN_acdbc16cd5909783c8a43996bcfedde74}{addr}
 CURL $\ast$ \hyperlink{structRIAK__CONN_a0c48f72b62d6eb51a7449c6fb3d93e3f}{curlh}
 \item 
 int \hyperlink{structRIAK__CONN_a2e3f4865323a6a35ef1b2bdccaaef497}{socket}
+\item 
+int \hyperlink{structRIAK__CONN_a45438c019b304f62a48fa4b7bd04c456}{last\_\-error}
+\item 
+char $\ast$ \hyperlink{structRIAK__CONN_a81357b1e5540c2347a8d10af43146647}{error\_\-msg}
 \end{DoxyCompactItemize}
 
+
+\subsection{Detailed Description}
+Connection handle structure. 
 
 \subsection{Field Documentation}
 \hypertarget{structRIAK__CONN_acdbc16cd5909783c8a43996bcfedde74}{
@@ -23,17 +35,27 @@ int \hyperlink{structRIAK__CONN_a2e3f4865323a6a35ef1b2bdccaaef497}{socket}
 \index{addr@{addr}!RIAK_CONN@{RIAK\_\-CONN}}
 \subsubsection[{addr}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ {\bf RIAK\_\-CONN::addr}}}
 \label{structRIAK__CONN_acdbc16cd5909783c8a43996bcfedde74}
-\hypertarget{structRIAK__CONN_a0c48f72b62d6eb51a7449c6fb3d93e3f}{
+Address of server for cURL in form: \href{http://hostname:port}{\tt http://hostname:port} \hypertarget{structRIAK__CONN_a0c48f72b62d6eb51a7449c6fb3d93e3f}{
 \index{RIAK\_\-CONN@{RIAK\_\-CONN}!curlh@{curlh}}
 \index{curlh@{curlh}!RIAK_CONN@{RIAK\_\-CONN}}
 \subsubsection[{curlh}]{\setlength{\rightskip}{0pt plus 5cm}CURL$\ast$ {\bf RIAK\_\-CONN::curlh}}}
 \label{structRIAK__CONN_a0c48f72b62d6eb51a7449c6fb3d93e3f}
-\hypertarget{structRIAK__CONN_a2e3f4865323a6a35ef1b2bdccaaef497}{
+cURL handle \hypertarget{structRIAK__CONN_a81357b1e5540c2347a8d10af43146647}{
+\index{RIAK\_\-CONN@{RIAK\_\-CONN}!error\_\-msg@{error\_\-msg}}
+\index{error\_\-msg@{error\_\-msg}!RIAK_CONN@{RIAK\_\-CONN}}
+\subsubsection[{error\_\-msg}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ {\bf RIAK\_\-CONN::error\_\-msg}}}
+\label{structRIAK__CONN_a81357b1e5540c2347a8d10af43146647}
+Riak internal error message. Only some operations return this message. Format: \char`\"{}(err code in hex): err msg\char`\"{} \hypertarget{structRIAK__CONN_a45438c019b304f62a48fa4b7bd04c456}{
+\index{RIAK\_\-CONN@{RIAK\_\-CONN}!last\_\-error@{last\_\-error}}
+\index{last\_\-error@{last\_\-error}!RIAK_CONN@{RIAK\_\-CONN}}
+\subsubsection[{last\_\-error}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf RIAK\_\-CONN::last\_\-error}}}
+\label{structRIAK__CONN_a45438c019b304f62a48fa4b7bd04c456}
+Error code of last operation. Codes can be found in \hyperlink{riakerrors_8h}{riakerrors.h} \hypertarget{structRIAK__CONN_a2e3f4865323a6a35ef1b2bdccaaef497}{
 \index{RIAK\_\-CONN@{RIAK\_\-CONN}!socket@{socket}}
 \index{socket@{socket}!RIAK_CONN@{RIAK\_\-CONN}}
 \subsubsection[{socket}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf RIAK\_\-CONN::socket}}}
 \label{structRIAK__CONN_a2e3f4865323a6a35ef1b2bdccaaef497}
-
+Socket descriptor for Protocol Buffers connection 
 
 The documentation for this struct was generated from the following file:\begin{DoxyCompactItemize}
 \item 
