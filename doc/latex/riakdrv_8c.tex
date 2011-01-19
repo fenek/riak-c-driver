@@ -1,0 +1,201 @@
+\hypertarget{riakdrv_8c}{
+\section{riakdrv.c File Reference}
+\label{riakdrv_8c}\index{riakdrv.c@{riakdrv.c}}
+}
+{\ttfamily \#include $<$string.h$>$}\par
+{\ttfamily \#include $<$stdlib.h$>$}\par
+{\ttfamily \#include $<$json/json\_\-tokener.h$>$}\par
+{\ttfamily \#include $<$sys/socket.h$>$}\par
+{\ttfamily \#include $<$netinet/in.h$>$}\par
+{\ttfamily \#include $<$netdb.h$>$}\par
+{\ttfamily \#include \char`\"{}riakdrv.h\char`\"{}}\par
+{\ttfamily \#include \char`\"{}riakproto/riakmessages.pb-\/c.h\char`\"{}}\par
+{\ttfamily \#include \char`\"{}riakproto/riakcodes.h\char`\"{}}\par
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structbuffered__char}{buffered\_\-char}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$ \hyperlink{riakdrv_8c_acc22345774338ad49b3139dc74e7e9e5}{riak\_\-init} (char $\ast$hostname, int pb\_\-port, int curl\_\-port, \hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct)
+\begin{DoxyCompactList}\small\item\em Create new handle. \item\end{DoxyCompactList}\item 
+int \hyperlink{riakdrv_8c_a8f4c5101059d0894aecbbfbbd3db680d}{riak\_\-exec\_\-op} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, \hyperlink{structRIAK__OP}{RIAK\_\-OP} $\ast$command, \hyperlink{structRIAK__OP}{RIAK\_\-OP} $\ast$result)
+\item 
+int \hyperlink{riakdrv_8c_a4afa67d57602fb8421d5e62a1fbafaf0}{riak\_\-ping} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct)
+\item 
+char $\ast$$\ast$ \hyperlink{riakdrv_8c_a974a652ca95fdfa26eb7bda6f1c0b08f}{riak\_\-list\_\-buckets} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, int $\ast$n\_\-buckets)
+\item 
+size\_\-t \hyperlink{riakdrv_8c_a7ea389a183b9921ce31d4994a307ef67}{readfunc} (void $\ast$ptr, size\_\-t size, size\_\-t nmemb, void $\ast$userdata)
+\item 
+size\_\-t \hyperlink{riakdrv_8c_ab9f8a870e233a2768ff1b6a4af3a7362}{writefunc} (void $\ast$ptr, size\_\-t size, size\_\-t nmemb, void $\ast$userdata)
+\item 
+void \hyperlink{riakdrv_8c_ad0615f1f92010db78712cd2a06ac5147}{riak\_\-put\_\-json} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, char $\ast$bucket, char $\ast$key, json\_\-object $\ast$elem)
+\item 
+json\_\-object $\ast$$\ast$ \hyperlink{riakdrv_8c_a6fc65357610dd512f9ebdba67d559e0d}{riak\_\-get\_\-json\_\-mapred} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, char $\ast$mapred\_\-statement, int $\ast$ret\_\-len)
+\item 
+json\_\-object $\ast$$\ast$ \hyperlink{riakdrv_8c_ae5963885b42dac3fe0d840f20f38aebd}{riak\_\-get\_\-json\_\-rs} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, char $\ast$mapred\_\-statement, int $\ast$ret\_\-len)
+\item 
+char $\ast$ \hyperlink{riakdrv_8c_ab267dbfa3510535367f80bfcef4768f3}{riak\_\-get\_\-raw\_\-rs} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, char $\ast$query)
+\item 
+void \hyperlink{riakdrv_8c_ac2cbf23402be266af0dbc121819276ca}{riak\_\-close} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct)
+\begin{DoxyCompactList}\small\item\em Closes connection to Riak. \item\end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{riakdrv_8c_a2251ba55279aef307357d4b82d7cffb7}{first\_\-time} = 1
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\hypertarget{riakdrv_8c_a7ea389a183b9921ce31d4994a307ef67}{
+\index{riakdrv.c@{riakdrv.c}!readfunc@{readfunc}}
+\index{readfunc@{readfunc}!riakdrv.c@{riakdrv.c}}
+\subsubsection[{readfunc}]{\setlength{\rightskip}{0pt plus 5cm}size\_\-t readfunc (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{ ptr, }
+\item[{size\_\-t}]{ size, }
+\item[{size\_\-t}]{ nmemb, }
+\item[{void $\ast$}]{ userdata}
+\end{DoxyParamCaption}
+)}}
+\label{riakdrv_8c_a7ea389a183b9921ce31d4994a307ef67}
+\hypertarget{riakdrv_8c_ac2cbf23402be266af0dbc121819276ca}{
+\index{riakdrv.c@{riakdrv.c}!riak\_\-close@{riak\_\-close}}
+\index{riak\_\-close@{riak\_\-close}!riakdrv.c@{riakdrv.c}}
+\subsubsection[{riak\_\-close}]{\setlength{\rightskip}{0pt plus 5cm}void riak\_\-close (
+\begin{DoxyParamCaption}
+\item[{{\bf RIAK\_\-CONN} $\ast$}]{ connstruct}
+\end{DoxyParamCaption}
+)}}
+\label{riakdrv_8c_ac2cbf23402be266af0dbc121819276ca}
+
+
+Closes connection to Riak. 
+
+This function ends cURL session, closes TCP socket and frees connstruct, so this structure can't be used after calling this function.
+
+
+\begin{DoxyParams}{Parameters}
+\item[{\em connstruct}]connection structure to be closed and freed. \end{DoxyParams}
+\hypertarget{riakdrv_8c_a8f4c5101059d0894aecbbfbbd3db680d}{
+\index{riakdrv.c@{riakdrv.c}!riak\_\-exec\_\-op@{riak\_\-exec\_\-op}}
+\index{riak\_\-exec\_\-op@{riak\_\-exec\_\-op}!riakdrv.c@{riakdrv.c}}
+\subsubsection[{riak\_\-exec\_\-op}]{\setlength{\rightskip}{0pt plus 5cm}int riak\_\-exec\_\-op (
+\begin{DoxyParamCaption}
+\item[{{\bf RIAK\_\-CONN} $\ast$}]{ connstruct, }
+\item[{{\bf RIAK\_\-OP} $\ast$}]{ command, }
+\item[{{\bf RIAK\_\-OP} $\ast$}]{ result}
+\end{DoxyParamCaption}
+)}}
+\label{riakdrv_8c_a8f4c5101059d0894aecbbfbbd3db680d}
+\hypertarget{riakdrv_8c_a6fc65357610dd512f9ebdba67d559e0d}{
+\index{riakdrv.c@{riakdrv.c}!riak\_\-get\_\-json\_\-mapred@{riak\_\-get\_\-json\_\-mapred}}
+\index{riak\_\-get\_\-json\_\-mapred@{riak\_\-get\_\-json\_\-mapred}!riakdrv.c@{riakdrv.c}}
+\subsubsection[{riak\_\-get\_\-json\_\-mapred}]{\setlength{\rightskip}{0pt plus 5cm}json\_\-object$\ast$$\ast$ riak\_\-get\_\-json\_\-mapred (
+\begin{DoxyParamCaption}
+\item[{{\bf RIAK\_\-CONN} $\ast$}]{ connstruct, }
+\item[{char $\ast$}]{ mapred\_\-statement, }
+\item[{int $\ast$}]{ ret\_\-len}
+\end{DoxyParamCaption}
+)}}
+\label{riakdrv_8c_a6fc65357610dd512f9ebdba67d559e0d}
+\hypertarget{riakdrv_8c_ae5963885b42dac3fe0d840f20f38aebd}{
+\index{riakdrv.c@{riakdrv.c}!riak\_\-get\_\-json\_\-rs@{riak\_\-get\_\-json\_\-rs}}
+\index{riak\_\-get\_\-json\_\-rs@{riak\_\-get\_\-json\_\-rs}!riakdrv.c@{riakdrv.c}}
+\subsubsection[{riak\_\-get\_\-json\_\-rs}]{\setlength{\rightskip}{0pt plus 5cm}json\_\-object$\ast$$\ast$ riak\_\-get\_\-json\_\-rs (
+\begin{DoxyParamCaption}
+\item[{{\bf RIAK\_\-CONN} $\ast$}]{ connstruct, }
+\item[{char $\ast$}]{ mapred\_\-statement, }
+\item[{int $\ast$}]{ ret\_\-len}
+\end{DoxyParamCaption}
+)}}
+\label{riakdrv_8c_ae5963885b42dac3fe0d840f20f38aebd}
+\hypertarget{riakdrv_8c_ab267dbfa3510535367f80bfcef4768f3}{
+\index{riakdrv.c@{riakdrv.c}!riak\_\-get\_\-raw\_\-rs@{riak\_\-get\_\-raw\_\-rs}}
+\index{riak\_\-get\_\-raw\_\-rs@{riak\_\-get\_\-raw\_\-rs}!riakdrv.c@{riakdrv.c}}
+\subsubsection[{riak\_\-get\_\-raw\_\-rs}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ riak\_\-get\_\-raw\_\-rs (
+\begin{DoxyParamCaption}
+\item[{{\bf RIAK\_\-CONN} $\ast$}]{ connstruct, }
+\item[{char $\ast$}]{ query}
+\end{DoxyParamCaption}
+)}}
+\label{riakdrv_8c_ab267dbfa3510535367f80bfcef4768f3}
+\hypertarget{riakdrv_8c_acc22345774338ad49b3139dc74e7e9e5}{
+\index{riakdrv.c@{riakdrv.c}!riak\_\-init@{riak\_\-init}}
+\index{riak\_\-init@{riak\_\-init}!riakdrv.c@{riakdrv.c}}
+\subsubsection[{riak\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}{\bf RIAK\_\-CONN} $\ast$ riak\_\-init (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{ hostname, }
+\item[{int}]{ pb\_\-port, }
+\item[{int}]{ curl\_\-port, }
+\item[{{\bf RIAK\_\-CONN} $\ast$}]{ connstruct}
+\end{DoxyParamCaption}
+)}}
+\label{riakdrv_8c_acc22345774338ad49b3139dc74e7e9e5}
+
+
+Create new handle. 
+
+This function creates new Riak handle. It contains both TCP socket for operations using Protocol Buffers and CURL handle for operations like using Riak Search.
+
+WARNING! If connstruct!=NULL, this function will assume that it doesn't describe open connection anyway, therefore will overwrite all values inside structure.
+
+
+\begin{DoxyParams}{Parameters}
+\item[{\em hostname}]string containing address where Riak server can be accessed, e.g. 127.0.0.1 \item[{\em pb\_\-port}]port where Protocol Buffers API is available, e.g. 8087; may be 0, in such case PB operations won't be available \item[{\em curl\_\-port}]port where HTTP server is available, e.g. 8089; may be 0, in such case HTTP operations won't be available \item[{\em connstruct}]structure for holding Riak connection data; when NULL -\/ new structure will be allocated\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+handle to Riak connection; if connstruct != NULL, then connstruct is returned 
+\end{DoxyReturn}
+\hypertarget{riakdrv_8c_a974a652ca95fdfa26eb7bda6f1c0b08f}{
+\index{riakdrv.c@{riakdrv.c}!riak\_\-list\_\-buckets@{riak\_\-list\_\-buckets}}
+\index{riak\_\-list\_\-buckets@{riak\_\-list\_\-buckets}!riakdrv.c@{riakdrv.c}}
+\subsubsection[{riak\_\-list\_\-buckets}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$$\ast$ riak\_\-list\_\-buckets (
+\begin{DoxyParamCaption}
+\item[{{\bf RIAK\_\-CONN} $\ast$}]{ connstruct, }
+\item[{int $\ast$}]{ n\_\-buckets}
+\end{DoxyParamCaption}
+)}}
+\label{riakdrv_8c_a974a652ca95fdfa26eb7bda6f1c0b08f}
+\hypertarget{riakdrv_8c_a4afa67d57602fb8421d5e62a1fbafaf0}{
+\index{riakdrv.c@{riakdrv.c}!riak\_\-ping@{riak\_\-ping}}
+\index{riak\_\-ping@{riak\_\-ping}!riakdrv.c@{riakdrv.c}}
+\subsubsection[{riak\_\-ping}]{\setlength{\rightskip}{0pt plus 5cm}int riak\_\-ping (
+\begin{DoxyParamCaption}
+\item[{{\bf RIAK\_\-CONN} $\ast$}]{ connstruct}
+\end{DoxyParamCaption}
+)}}
+\label{riakdrv_8c_a4afa67d57602fb8421d5e62a1fbafaf0}
+\hypertarget{riakdrv_8c_ad0615f1f92010db78712cd2a06ac5147}{
+\index{riakdrv.c@{riakdrv.c}!riak\_\-put\_\-json@{riak\_\-put\_\-json}}
+\index{riak\_\-put\_\-json@{riak\_\-put\_\-json}!riakdrv.c@{riakdrv.c}}
+\subsubsection[{riak\_\-put\_\-json}]{\setlength{\rightskip}{0pt plus 5cm}void riak\_\-put\_\-json (
+\begin{DoxyParamCaption}
+\item[{{\bf RIAK\_\-CONN} $\ast$}]{ connstruct, }
+\item[{char $\ast$}]{ bucket, }
+\item[{char $\ast$}]{ key, }
+\item[{json\_\-object $\ast$}]{ elem}
+\end{DoxyParamCaption}
+)}}
+\label{riakdrv_8c_ad0615f1f92010db78712cd2a06ac5147}
+\hypertarget{riakdrv_8c_ab9f8a870e233a2768ff1b6a4af3a7362}{
+\index{riakdrv.c@{riakdrv.c}!writefunc@{writefunc}}
+\index{writefunc@{writefunc}!riakdrv.c@{riakdrv.c}}
+\subsubsection[{writefunc}]{\setlength{\rightskip}{0pt plus 5cm}size\_\-t writefunc (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{ ptr, }
+\item[{size\_\-t}]{ size, }
+\item[{size\_\-t}]{ nmemb, }
+\item[{void $\ast$}]{ userdata}
+\end{DoxyParamCaption}
+)}}
+\label{riakdrv_8c_ab9f8a870e233a2768ff1b6a4af3a7362}
+
+
+\subsection{Variable Documentation}
+\hypertarget{riakdrv_8c_a2251ba55279aef307357d4b82d7cffb7}{
+\index{riakdrv.c@{riakdrv.c}!first\_\-time@{first\_\-time}}
+\index{first\_\-time@{first\_\-time}!riakdrv.c@{riakdrv.c}}
+\subsubsection[{first\_\-time}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf first\_\-time} = 1}}
+\label{riakdrv_8c_a2251ba55279aef307357d4b82d7cffb7}

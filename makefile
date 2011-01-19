@@ -1,8 +1,9 @@
 CC = gcc
-CFLAGS = -O2 -fPIC
-LDFLAGS = -O2 -lcurl -ljson
+CFLAGS = -O2 -fPIC -g
+LDFLAGS =
+LDLIBS = -lprotobuf-c -lcurl -ljson
 
-SOURCES = riakdrv.c
+SOURCES = riakdrv.c riakproto/riakmessages.pb-c.c
 OBJECTS = $(SOURCES:.c=.o)
 
 PREFIX = /usr/local
@@ -22,5 +23,7 @@ uninstall:
 libriakdrv.so: $(OBJECTS)
 	$(CC) -fPIC -shared $(LDFLAGS) $(LDLIBS) $^ -o $@
 
+test: libriakdrv.so test.c
+
 clean:
-	rm -f *.o *~ libriakdrv.so
+	rm -f *.o *~ libriakdrv.so test

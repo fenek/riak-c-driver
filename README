@@ -1,6 +1,6 @@
 ----------------------------------------------
 		riak-c-driver
-		 v0.01 alpha
+		 v0.02 alpha
 
 by Piotr Nosek, Erlang Solutions Ltd.
 ----------------------------------------------
@@ -17,19 +17,23 @@ by Piotr Nosek, Erlang Solutions Ltd.
 8. Links and references
 
 --- 1. Overview ---
-Riak[1] is a No-SQL database, which emphasizes on replication and data distribution. This driver/library provides means to communicate with Riak instances using cURL[2]. In fact it works as cURL wrapper and HTTP response parser. Originally this library was created during attempts of benchmarking Riak in comaprison to MongoDB[3] and MySQL[4] and it was decided that it deserves being a separate project. ;)
+Riak[1] is a No-SQL database, which emphasizes on replication and data distribution. This driver/library provides means to communicate with Riak instances using cURL[2] and Protocol Buffers[3][4]. In fisrt case, it works as cURL wrapper and HTTP response parser. In second case, it communicates via TCP socket. Originally this library was created during attempts of benchmarking Riak in comaprison to MongoDB[5] and MySQL[6] and it was decided that it deserves being a separate project. ;)
 Right now this driver provides very limited functionality, but it's definitely something to start with.
 
 --- 2. Requirements ---
 Dependencies for this project: (header files required for compilation)
 - cURL
-- json-c[5]
+- Protocol Buffers
+- Protocol Buffers for C
+- json-c[7]
 
 C standard library is also required. Library was tested with gcc but it should work fine with other C compilers.
 
 --- 3. Installation ---
 
-Just type
+First make sure you have installed all dependencies.
+
+Then just type
 $ make
 and then (as superuser)
 # make install
@@ -39,6 +43,9 @@ This will create dynamic-linked library libriakdrv.so and copy it to PREFIX/lib 
 If you want to uninstall the library, use
 # make uninstall
 This will erase both .so and .h file.
+
+If you want to compile test application (which can also suit as an example how to use the driver), type
+$ make test
 
 --- 4. Usage ---
 
@@ -61,6 +68,13 @@ Probably too many to list. :) It's very alpha version though...
 
 --- 7. Version history ---
 
+==> v0.02 alpha <==
+- began porting most functionality to Protocol Buffers
+- now Riak can be pinged
+- fetching list of buckets
+- started creating documentation in Doxygen
+- added very simple testing application
+
 ==> v0.01 alpha <==
 - opening/closing "connection"
 - no multiple "connections" support
@@ -71,6 +85,8 @@ Probably too many to list. :) It's very alpha version though...
 --- 8. Links and references ---
 [1] http://wiki.basho.com
 [2] http://curl.haxx.se
-[3] http://www.mongodb.org
-[4] http://www.mysql.com
-[5] http://oss.metaparadigm.com/json-c/
+[3] http://code.google.com/p/protobuf/
+[4] http://code.google.com/p/protobuf-c/
+[5] http://www.mongodb.org
+[6] http://www.mysql.com
+[7] http://oss.metaparadigm.com/json-c/
