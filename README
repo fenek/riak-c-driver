@@ -1,6 +1,6 @@
 ----------------------------------------------
 		riak-c-driver
-		 v0.02 alpha
+		 v0.02a alpha
 
 by Piotr Nosek, Erlang Solutions Ltd.
 ----------------------------------------------
@@ -51,15 +51,13 @@ $ make test
 
 To use the library, just include riakdrv.h header file and add -lriakdrv to your linker parameters.
 
-Coming soon: API documentation.
+For detailed documentation check doc/ directory.
 
 --- 5. TODO list ---
-- multiple connection support
+- rewrite remaining possible functions from cURL to Protocol Buffers 
 - getting JSON from DB by key
-- error handling
 - logging
 - tests
-- detailed API description
 
 - aided MapReduce statement creation?
 
@@ -68,7 +66,12 @@ Probably too many to list. :) It's very alpha version though...
 
 --- 7. Version history ---
 
+==> v0.02a alpha <==
+- filled most of documentation
+- introduced error reporting
+
 ==> v0.02 alpha <==
+- multiple connection support - but not tested yet
 - began porting most functionality to Protocol Buffers
 - now Riak can be pinged
 - fetching list of buckets

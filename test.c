@@ -25,13 +25,18 @@ int main() {
 		return 1;
 	}
 
+	printf("Listing all buckets:\n");
 	buckets = riak_list_buckets(conn, &n_buckets);
 	for(i=0; i<n_buckets; i++)
-		printf("bucket: %s\n", buckets[i]);
+		printf("\t%s\n", buckets[i]);
 
 	printf("Closing connection... ");
 	riak_close(conn);
 	printf("OK\n");
+
+	printf("Possible error codes:\n");
+	for(i=0; i<RERR_MAX_CODE; i++)
+		printf("\t%d: %s\n", i, RIAK_ERR_MSGS[i]);
 
 	return 0;
 }

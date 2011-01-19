@@ -14,17 +14,37 @@
 #include <sys/types.h>
 #include <curl/curl.h>
 
+#include "riakerrors.h"
+
 /* --------------------------- STRUCTURE DEFINITIONS --------------------------- */
 
+/**
+ * \brief Connection handle structure.
+ */
 typedef struct {
+	/** Address of server for cURL in form: http://hostname:port */
 	char * addr;
+	/** cURL handle */
 	CURL * curlh;
+	/** Socket descriptor for Protocol Buffers connection */
 	int socket;
+	/** Error code of last operation. Codes can be found in riakerrors.h */
+	int last_error;
+	/** Riak internal error message. Only some operations return this message. Format: "(err code in hex): err msg" */
+	char * error_msg;
 } RIAK_CONN;
 
+/**
+ * \brief Riak operation structure.
+ *
+ * This structure serves both as place for request data and response data.
+ */
 typedef struct {
+	/** Length of command. Equals length of msg + 1 (1 byte for msg code). */
 	__uint32_t length;
+	/** Message code. Defined in Riak API, also respective defines are in riakcodes.h. */
 	__uint8_t msgcode;
+	/** Additional message data. Should be NULL if request doesn't pass any additional data. */
 	char * msg;
 } RIAK_OP;
 
@@ -45,14 +65,47 @@ typedef struct {
  * @param curl_port port where HTTP server is available, e.g. 8089; may be 0, in such case HTTP operations won't be available
  * @param connstruct structure for holding Riak connection data; when NULL - new structure will be allocated
  *
- * @return handle to Riak connection; if connstruct != NULL, then connstruct is returned
+ * @return handle to Riak connection; if connstruct != NULL, then connstruct is returned; returns NULL on error
  */
 RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port, RIAK_CONN * connstruct);
 
+/** \fn int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result)
+ * 	\brief Executes Riak operation via Protocol Buffers socket and receives response.
+ *
+ * This is universal function for executing Riak operations and receiving responses. It is a wrapper
+ * for socket operations. Ultimately, user shouldn't have to use this function because other functions
+ * are to cover all possible operations. Still, probably this function will remain in library API even then.
+ *
+ * @param connstruct connection handle
+ * @param command command to be sent to Riak
+ * @param result structure for response; this function won't allocate space and won't check if result structure exists!
+ *
+ * @return 0 if success, error code > 0 when failure
+ */
 int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result);
 
+/**	\fn int riak_ping(RIAK_CONN * connstruct)
+ *	\brief Pings Riak server.
+ *
+ * Sends ping request to Riak via Protocol Buffers.
+ *
+ * @param connstruct connection handle
+ *
+ * @return 0 if success, not 0 on error
+*/
 int riak_ping(RIAK_CONN * connstruct);
 
+/**	\fn char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets)
+ *	\brief Fetches list of buckets.
+ *
+ * This function sends list buckets request to Riak and returns array of null-terminated strings containing names
+ * of all buckets. This array is not managed later so user should take care of freeing it after usage!
+ *
+ * @param connstruct connection handle
+ * @param n_buckets pointer to integer, where bucket count will be written
+ *
+ * @return array (of n_buckets length) of null-terminated strings; NULL on error
+ */
 char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets);
 
 /** \fn void riak_put_json(char * bucket, char * key, json_object * elem)
@@ -65,9 +118,9 @@ char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets);
  *  @param key key for passed value
  *  @param elem JSON structure which should be inserted
  */
+
 void riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem);
 json_object ** riak_get_json_mapred(RIAK_CONN * connstruct, char * mapred_statement, int *ret_len);
-json_object ** riak_get_json_rs(RIAK_CONN * connstruct, char * query, int *ret_len); /* NOT IMPLEMENTED */
 char * riak_get_raw_rs(RIAK_CONN * connstruct, char * query);
 
 /** \fn void riak_close(RIAK_CONN * connstruct)

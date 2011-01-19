@@ -18,54 +18,104 @@
 #include "riakproto/riakmessages.pb-c.h"
 #include "riakproto/riakcodes.h"
 
+/**
+ * \brief Helper structure for exchanging data with cURL.
+ */
 struct buffered_char {
+	/** Null-terminated string. */
 	char * buffer;
+	/** Current position in buffer */
 	int pointer;
 };
 
-int first_time = 1; // we should initialize cURL only once
+/** We should initialize cURL only once so this is the flag indicating whether initialization is necessary. */
+int first_time = 1;
+
+/**	\fn void riak_copy_error(RIAK_CONN * connstruct, RpbErrorResp * errorResp)
+ * 	\brief Helper function for copying error message from PB structure to RIAK_CONN.
+ *
+ * Simple function that copies error description from RpbErrorResp to RIAK_CONN in such way,
+ * that RIAK_CONN.error_msg is cleared (if not NULL) and then error message is allocated to it.
+ * Message has following format: "(<Riak error code in hex>): <Riak error message>".
+ *
+ * @param connstruct Riak connection handle
+ * @param errorResp Protocol Buffers structure containing Riak error response
+ */
+void riak_copy_error(RIAK_CONN * connstruct, RpbErrorResp * errorResp) {
+	char * tmp;
+
+	if(connstruct->error_msg != NULL)
+		free(connstruct->error_msg);
+	connstruct->error_msg = malloc(errorResp->errmsg.len+1+sizeof(errorResp->errcode)*2+4);
+	tmp = malloc(errorResp->errmsg.len);
+	memcpy(tmp, errorResp->errmsg.data, errorResp->errmsg.len);
+	tmp[errorResp->errmsg.len] = '\0';
+	sprintf(connstruct->error_msg, "(%X): %s", errorResp->errcode, tmp);
+	free(tmp);
+}
 
 RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port, RIAK_CONN * connstruct) {
 	int sockfd;
 	struct sockaddr_in serv_addr;
 	struct hostent *server;
 
-	char buffer[256];
+	char * buffer;
 
 	if(connstruct == NULL)
 		connstruct = malloc(sizeof(RIAK_CONN));
-	if(first_time) {
-		curl_global_init(CURL_GLOBAL_ALL);
-		first_time = 0;
+
+	connstruct->last_error = RERR_OK;
+	connstruct->error_msg = NULL;
+
+	/* Protocol Buffers part */
+	if(pb_port != 0) {
+		sockfd = socket(AF_INET, SOCK_STREAM, 0);
+		if (sockfd < 0) {
+			connstruct->last_error = RERR_SOCKET;
+			close(sockfd);
+			return connstruct;
+		}
+		server = gethostbyname(hostname);
+		if (server == NULL) {
+			connstruct->last_error = RERR_HOSTNAME;
+			close(sockfd);
+			return connstruct;
+		}
+		bzero((char *) &serv_addr, sizeof(serv_addr));
+		serv_addr.sin_family = AF_INET;
+		bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
+		serv_addr.sin_port = htons(pb_port);
+		if (connect(sockfd,(const struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0) {
+			connstruct->last_error = RERR_PB_CONNECT;
+			close(sockfd);
+			return connstruct;
+		}
+
+		connstruct->socket = sockfd;
+	} else {
+		connstruct->socket = 0;
 	}
 
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd < 0) {
-		perror("sockfd");
-		return NULL;
-	}
-	server = gethostbyname(hostname);
-	if (server == NULL) {
-		perror("gethostbyname");
-		return NULL;
-	}
-	bzero((char *) &serv_addr, sizeof(serv_addr));
-	serv_addr.sin_family = AF_INET;
-	bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
-	serv_addr.sin_port = htons(pb_port);
-	if (connect(sockfd,(const struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0) {
-		error("ERROR connecting");
-		return NULL;
-	}
-
-	connstruct->socket = sockfd;
-
+	/* cURL part */
 	if(curl_port != 0) {
-		sprintf(buffer, "%s:%d", hostname, curl_port);
+		if(first_time) {
+			curl_global_init(CURL_GLOBAL_ALL);
+			first_time = 0;
+		}
 
+		buffer = malloc(strlen(hostname)+strlen("http://:")+30);
+		sprintf(buffer, "http://%s:%d", hostname, curl_port);
 		connstruct->addr = malloc(strlen(buffer)+1);
 		strcpy(connstruct->addr, buffer);
-		connstruct->curlh = curl_easy_init();
+		free(buffer);
+		if((connstruct->curlh = curl_easy_init()) == NULL) {
+			if(connstruct->socket != 0) {
+				close(connstruct->socket);
+				free(connstruct->addr);
+				connstruct->last_error = RERR_CURL_INIT;
+				return connstruct;
+			}
+		}
 	} else {
 		connstruct->addr = NULL;
 		connstruct->curlh = NULL;
@@ -79,6 +129,9 @@ int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result) {
 	int n;
 	char * msg;
 
+	connstruct->last_error = RERR_OK;
+
+	/* Preparing message for sending */
 	msg = malloc(4+command->length);
 	length = htonl(command->length);
 	memcpy(msg, &length, 4);
@@ -88,20 +141,32 @@ int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result) {
 	if(command->length > 1)
 		memcpy(msg+5, command->msg, command->length-1);
 
+	/* Sending message! */
 	n = write(connstruct->socket,msg,4+command->length);
-	if (n != 4+command->length)
-		return 1;
+	if (n != 4+command->length) {
+		connstruct->last_error = RERR_OP_SEND;
+		free(msg);
+		return RERR_OP_SEND;
+	}
 
+	/* Receive response length */
 	n = recv(connstruct->socket, &length, 4, MSG_WAITALL);
-	if (n != 4)
-		return 2;
+	if (n != 4) {
+		connstruct->last_error = RERR_OP_RECV_LEN;
+		free(msg);
+		return RERR_OP_RECV_LEN;
+	}
 
 	length = ntohl(length);
 	result->length = length;
 
+	/* Receive message code */
 	n = recv(connstruct->socket, &cmdcode, 1, MSG_WAITALL);
-	if (n != 1)
-		return 4;
+	if (n != 1) {
+		connstruct->last_error = RERR_OP_RECV_OPCODE;
+		free(msg);
+		return RERR_OP_RECV_OPCODE;
+	}
 
 	result->msgcode = cmdcode;
 
@@ -109,11 +174,16 @@ int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result) {
 		free(result->msg);
 		result->msg = NULL;
 	}
+	/* Receive additional data, if such exists. */
 	if(length>1) {
 		result->msg = malloc(length-1);
 		n = recv(connstruct->socket, result->msg, length-1, MSG_WAITALL);
-		if (n != length-1)
-			return 5;
+		if (n != length-1) {
+			connstruct->last_error = RERR_OP_RECV_DATA;
+			free(msg);
+			free(result->msg);
+			return RERR_OP_RECV_DATA;
+		}
 	}
 
 	free(msg);
@@ -124,13 +194,16 @@ int riak_ping(RIAK_CONN * connstruct) {
 	RIAK_OP command, res;
 
 	command.length = 1;
-	command.msgcode = 1;
+	command.msgcode = RPB_PING_REQ;
 	command.msg = NULL;
 	res.msg = NULL;
 
-	riak_exec_op(connstruct, &command, &res);
+	connstruct->last_error = RERR_OK;
 
-	return (res.msgcode != 2);
+	if(riak_exec_op(connstruct, &command, &res) != 0)
+		return 1;
+
+	return (res.msgcode != RPB_PING_RESP);
 }
 
 char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets) {
@@ -141,14 +214,17 @@ char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets) {
 	char ** bucketList = NULL;
 
 	command.length = 1;
-	command.msgcode = 15;
+	command.msgcode = RPB_LIST_BUCKETS_REQ;
 	command.msg = NULL;
 	res.msg = NULL;
 
-	if((i=riak_exec_op(connstruct, &command, &res))!=0)
+	connstruct->last_error = RERR_OK;
+
+	if(riak_exec_op(connstruct, &command, &res)!=0)
 		return NULL;
 
-	if(res.msgcode == 16) {
+	/* Received correct response */
+	if(res.msgcode == RPB_LIST_BUCKETS_RESP) {
 		bucketsResp = rpb_list_buckets_resp__unpack(NULL, res.length-1, res.msg);
 
 		*n_buckets = bucketsResp->n_buckets;
@@ -160,17 +236,35 @@ char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets) {
 		}
 
 		rpb_list_buckets_resp__free_unpacked(bucketsResp, NULL);
-	} else if(res.msgcode == 0) {
+	/* Riak reported an error */
+	} else if(res.msgcode == RPB_ERROR_RESP) {
 		errorResp = rpb_error_resp__unpack(NULL, res.length-1, res.msg);
 
-		/* TODO: error reporting */
+		connstruct->last_error = RERR_BUCKET_LIST;
+		riak_copy_error(connstruct, errorResp);
 
 		rpb_error_resp__free_unpacked(errorResp, NULL);
+	/* Something really bad happened. :( */
+	} else {
+		connstruct->last_error = RERR_UNKNOWN;
 	}
 
 	return bucketList;
 }
 
+/** \fn size_t readfunc(void *ptr, size_t size, size_t nmemb, void *userdata)
+ * 	\brief Helper function for cURL, reads data from buffer
+ *
+ * This is helper function for cURL, which takes userdata and ptr (internal field where cURL stores data to be sent)
+ * and then copies contents of userdata to ptr. This function assumes that userdata is of type struct buffered_char.
+ *
+ * @param ptr internal cURL location
+ * @param size size of one data piece
+ * @param nmemb count of data pieces
+ * @param userdata structure from which data should be read
+ *
+ * @return amount of data copied
+ */
 size_t readfunc(void *ptr, size_t size, size_t nmemb, void *userdata) {
 	struct buffered_char * data = (struct buffered_char *)userdata;
 	
@@ -181,6 +275,19 @@ size_t readfunc(void *ptr, size_t size, size_t nmemb, void *userdata) {
 	return datalen;
 }
 
+/** \fn size_t writefunc(void *ptr, size_t size, size_t nmemb, void *userdata)
+ * 	\brief Helper function for cURL, writes data to buffer
+ *
+ * This is helper function for cURL, which takes userdata and ptr (internal field where cURL stores data received)
+ * and then copies contents of ptr to userdata. This function assumes that userdata is of type struct buffered_char.
+ *
+ * @param ptr internal cURL location
+ * @param size size of one data piece
+ * @param nmemb count of data pieces
+ * @param userdata structure to which data should be read
+ *
+ * @return amount of data copied
+ */
 size_t writefunc(void *ptr, size_t size, size_t nmemb, void *userdata) {
 	struct buffered_char * data = (struct buffered_char *)userdata;
 	
@@ -300,10 +407,6 @@ json_object ** riak_get_json_mapred(RIAK_CONN * connstruct, char * mapred_statem
 	curl_slist_free_all(headerlist);
 	
 	return retTab;
-}
-
-json_object ** riak_get_json_rs(RIAK_CONN * connstruct, char * mapred_statement, int *ret_len) { // NOT IMPLEMENTED!!!
-	return NULL;
 }
 
 char * riak_get_raw_rs(RIAK_CONN * connstruct, char * query) {
