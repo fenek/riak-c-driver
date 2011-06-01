@@ -6,15 +6,17 @@ LDLIBS = -lprotobuf-c -lcurl -ljson
 SOURCES = riakdrv.c riakproto/riakmessages.pb-c.c
 OBJECTS = $(SOURCES:.c=.o)
 
-PREFIX = /usr/local
+PREFIX?=/usr/local
 LIBDIR = $(PREFIX)/lib/
 INCDIR = $(PREFIX)/include/
 
 all: libriakdrv.so
 
 install: libriakdrv.so
-	cp libriakdrv.so $(LIBDIR)
-	cp riakdrv.h $(INCDIR)
+	install -d $(LIBDIR)
+	install -d $(INCDIR)
+	install libriakdrv.so $(LIBDIR)
+	install riakdrv.h $(INCDIR)
 
 uninstall:
 	rm $(LIBDIR)libriakdrv.so
