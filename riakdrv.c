@@ -33,6 +33,22 @@
 #include "riakproto/riakmessages.pb-c.h"
 #include "riakproto/riakcodes.h"
 
+const char * (RIAK_ERR_MSGS[]) = {
+		"Success",
+		/* Errors for riak_init */
+		"Socket creation error",
+		"Can't fetch host name",
+		"Couldn't connect to PB socket",
+		"Couldn't initialize cURL handle",
+		/* Errors for riak_exec_op */
+		"Error when sending data via PB socket",
+		"Error when receiving length of response via PB socket",
+		"Error when receiving command code via PB socket",
+		"Error when receiving command message via PB socket",
+		/* Errors for riak_list_buckets */
+		"Error when fetching bucket list"
+};
+
 /**
  * \brief Helper structure for exchanging data with cURL.
  */
