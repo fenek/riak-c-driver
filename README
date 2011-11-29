@@ -1,6 +1,6 @@
 ----------------------------------------------
 		riak-c-driver
-		 v0.02a alpha
+		 v0.2.1 alpha
 
 by Piotr Nosek, Erlang Solutions Ltd.
 ----------------------------------------------
@@ -33,19 +33,19 @@ C standard library is also required. Library was tested with gcc but it should w
 
 First make sure you have installed all dependencies.
 
+If you checked out the source code from the git archive, you may need to run
+$ autoreconf -i
+
 Then just type
+$ ./configure
 $ make
 and then (as superuser)
 # make install
 
-This will create dynamic-linked library libriakdrv.so and copy it to PREFIX/lib (default PREFIX: /usr/local). Additionaly riakdrv.h header file will be copied to PREFIX/include.
-
-If you want to uninstall the library, use
-# make uninstall
-This will erase both .so and .h file.
+This will create dynamic-linked library libriakdrv.so and copy it to PREFIX/lib (default PREFIX: /usr/local). Additionally, the riakdrv.h and riakerrors.h header files will be copied to PREFIX/include.  You can override the default PREFIX by using configure's "--prefix=PREFIX" command-line argument.
 
 If you want to compile test application (which can also suit as an example how to use the driver), type
-$ make test
+$ make check
 
 --- 4. Usage ---
 
@@ -65,6 +65,10 @@ For detailed documentation check doc/ directory.
 Probably too many to list. :) It's very alpha version though...
 
 --- 7. Version history ---
+
+==> v0.2.1 <==
+- converted to use GNU autotools for building (and switched to compatible
+  version number scheme)
 
 ==> v0.022 alpha <==
 - by [wjlroe]: improved makefile, some cosmetic changes to git ignore etc.
