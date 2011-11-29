@@ -4,6 +4,9 @@
 *.so
 /.deps
 /.libs
+/riak-c-driver-*.tar.gz
+/riak-c-driver.spec
+/rpmbuild
 Makefile
 Makefile.in
 autom4te.cache/

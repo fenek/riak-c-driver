@@ -13,5 +13,6 @@ AC_SUBST(JSON_LIBS)
 
 AC_CONFIG_FILES([
   Makefile
+  riak-c-driver.spec
 ])
 AC_OUTPUT
