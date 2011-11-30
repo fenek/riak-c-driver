@@ -138,6 +138,22 @@ int riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data);
 
 void riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem);
 
+/** \fn void riak_putb_json(char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem)
+ *  \brief Puts JSON data into DB.
+ *
+ *  This function puts JSON data into chosen bucket with certain key.
+ *	The bucket and key may contain 0 bytes.
+ *
+ *	@param connstruct Riak connection structure
+ *  @param bucket name of the bucket for data
+ *  @param bucketlen length of the bucket
+ *  @param key key for passed value
+ *  @param keylen length of the key
+ *  @param elem JSON structure which should be inserted
+ */
+
+void riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem);
+
 json_object ** riak_get_json_mapred(RIAK_CONN * connstruct, char * mapred_statement, int *ret_len);
 char * riak_get_raw_rs(RIAK_CONN * connstruct, char * query);
 
@@ -150,5 +166,11 @@ char * riak_get_raw_rs(RIAK_CONN * connstruct, char * query);
  *  @param connstruct connection structure to be closed and freed.
  */
 void riak_close(RIAK_CONN * connstruct);
+
+/*
+ * Local Variables:
+ * tab-width: 4
+ * End:
+ */
 
 #endif

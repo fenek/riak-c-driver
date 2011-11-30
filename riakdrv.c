@@ -29,6 +29,7 @@
 #include <netdb.h>
 
 #include "riakdrv.h"
+#include "urlcode.h"
 
 #include "riakproto/riakmessages.pb-c.h"
 #include "riakproto/riakcodes.h"
@@ -388,7 +389,7 @@ int riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data) {
 	return 0;
 }
 
-void riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem) {
+void riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem) {
 	int i;
 	char address[1024];
 	CURLcode res;
@@ -397,11 +398,17 @@ void riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_objec
 	CURL * curl = connstruct->curlh;
 	char * addr = connstruct->addr;
 	
+	char * bucket_urlenc = url_encode_bin(bucket, bucketlen);
+	char * key_urlenc = url_encode_bin(key, keylen);
+
 	if((key == NULL)||(elem == NULL))
 		return;
 	
-	sprintf(address, "http://%s/riak/%s/%s", addr, bucket, key);
+	sprintf(address, "http://%s/riak/%s/%s", addr, bucket_urlenc, key_urlenc);
 	
+	free(bucket_urlenc);
+	free(key_urlenc);
+
 	headerlist = curl_slist_append(headerlist, "Content-type: application/json");
 	
 	data.buffer = (char*)json_object_get_string(elem);
@@ -418,6 +425,10 @@ void riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_objec
 	res = curl_easy_perform(curl);
 	
 	curl_slist_free_all(headerlist);
+}
+
+void riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem) {
+	riak_putb_json(connstruct, bucket, strlen(bucket), key, strlen(key), elem);
 }
 
 json_object ** riak_get_json_mapred(RIAK_CONN * connstruct, char * mapred_statement, int *ret_len) {
@@ -537,3 +548,9 @@ void riak_close(RIAK_CONN * connstruct) {
 	close(connstruct->socket);
 	free(connstruct);
 }
+
+/*
+ * Local Variables:
+ * tab-width: 4
+ * End:
+ */
