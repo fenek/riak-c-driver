@@ -5,6 +5,7 @@
 /.deps
 /.libs
 /riak-c-driver-*.tar.gz
+/riak-c-driver.pc
 /riak-c-driver.spec
 /rpmbuild
 Makefile

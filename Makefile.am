@@ -8,11 +8,14 @@ EXTRA_libriakdrv_la_SOURCES = riakproto/riakmessages.proto
 libriakdrv_la_LDFLAGS = -version-number $(subst .,:,$(VERSION))
 include_HEADERS = riakdrv.h riakerrors.h
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = riak-c-driver.pc
+
 check_PROGRAMS = test
 test_SOURCES = test.c
 test_LDADD = libriakdrv.la @PROTOBUFC_LIBS@ @CURL_LIBS@ @JSON_LIBS@
 
-EXTRA_DIST = riak-c-driver.spec.in
+EXTRA_DIST = riak-c-driver.pc.in riak-c-driver.spec.in
 
 SRCRPM=riak-c-driver-$(VERSION)-1.dist.src.rpm
 rpm : rpmbuild/SRPMS/$(SRCRPM)
