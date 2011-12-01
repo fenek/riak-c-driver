@@ -62,7 +62,7 @@ typedef struct {
 	/** Message code. Defined in Riak API, also respective defines are in riakcodes.h. */
 	__uint8_t msgcode;
 	/** Additional message data. Should be NULL if request doesn't pass any additional data. */
-	char * msg;
+	__uint8_t * msg;
 } RIAK_OP;
 
 /* --------------------------- FUNCTIONS DEFINITIONS --------------------------- */

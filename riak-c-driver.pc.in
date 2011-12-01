@@ -6,6 +6,6 @@ includedir=@includedir@
 Name: riak-c-driver
 Description: C library for Riak
 Version: @VERSION@
-Requires: libprotobuf-c, libcurl, json
+Requires: glib-2.0, libprotobuf-c, libcurl, json
 Libs: -L${libdir} -lriakdrv
 Cflags: -I${includedir}

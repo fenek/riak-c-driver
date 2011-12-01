@@ -21,6 +21,7 @@
  *      Company: Erlang Solutions Ltd.
  */
 
+#include <glib.h>
 #include <json/json_tokener.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -81,13 +82,13 @@ void riak_copy_error(RIAK_CONN * connstruct, RpbErrorResp * errorResp) {
 	char * tmp;
 
 	if(connstruct->error_msg != NULL)
-		free(connstruct->error_msg);
-	connstruct->error_msg = malloc(errorResp->errmsg.len+1+sizeof(errorResp->errcode)*2+4);
-	tmp = malloc(errorResp->errmsg.len);
+		g_free(connstruct->error_msg);
+	connstruct->error_msg = g_malloc(errorResp->errmsg.len+1+sizeof(errorResp->errcode)*2+4);
+	tmp = g_malloc(errorResp->errmsg.len);
 	memcpy(tmp, errorResp->errmsg.data, errorResp->errmsg.len);
 	tmp[errorResp->errmsg.len] = '\0';
 	sprintf(connstruct->error_msg, "(%X): %s", errorResp->errcode, tmp);
-	free(tmp);
+	g_free(tmp);
 }
 
 RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port) {
@@ -95,7 +96,7 @@ RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port) {
 	struct sockaddr_in serv_addr;
 	struct hostent *server;
 
-	RIAK_CONN * connstruct = malloc(sizeof(RIAK_CONN));
+	RIAK_CONN * connstruct = g_malloc(sizeof(RIAK_CONN));
 
 	connstruct->last_error = RERR_OK;
 	connstruct->error_msg = NULL;
@@ -138,15 +139,15 @@ RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port) {
 			first_time = 0;
 		}
 
-		buffer = malloc(strlen(hostname)+strlen("http://:")+30);
+		buffer = g_malloc(strlen(hostname)+strlen("http://:")+30);
 		sprintf(buffer, "http://%s:%d", hostname, curl_port);
-		connstruct->addr = malloc(strlen(buffer)+1);
+		connstruct->addr = g_malloc(strlen(buffer)+1);
 		strcpy(connstruct->addr, buffer);
-		free(buffer);
+		g_free(buffer);
 		if((connstruct->curlh = curl_easy_init()) == NULL) {
 			if(connstruct->socket != 0) {
 				close(connstruct->socket);
-				free(connstruct->addr);
+				g_free(connstruct->addr);
 				connstruct->last_error = RERR_CURL_INIT;
 				return connstruct;
 			}
@@ -172,7 +173,7 @@ void riak_close(RIAK_CONN * connstruct) {
 		connstruct->curlh = NULL;
 	}
 	if (connstruct->addr != NULL) {
-		free(connstruct->addr);
+		g_free(connstruct->addr);
 		connstruct->addr = NULL;
 	}
 	if (connstruct->curl_headers != NULL) {
@@ -183,7 +184,7 @@ void riak_close(RIAK_CONN * connstruct) {
 		close(connstruct->socket);
 		connstruct->socket = 0;
 	}
-	free(connstruct);
+	g_free(connstruct);
 }
 
 int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result) {
@@ -195,7 +196,7 @@ int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result) {
 	connstruct->last_error = RERR_OK;
 
 	/* Preparing message for sending */
-	msg = malloc(4+command->length);
+	msg = g_alloca(4+command->length);
 	length = htonl(command->length);
 	memcpy(msg, &length, 4);
 
@@ -208,7 +209,6 @@ int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result) {
 	n = write(connstruct->socket,msg,4+command->length);
 	if (n != 4+command->length) {
 		connstruct->last_error = RERR_OP_SEND;
-		free(msg);
 		return RERR_OP_SEND;
 	}
 
@@ -216,7 +216,6 @@ int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result) {
 	n = recv(connstruct->socket, &length, 4, MSG_WAITALL);
 	if (n != 4) {
 		connstruct->last_error = RERR_OP_RECV_LEN;
-		free(msg);
 		return RERR_OP_RECV_LEN;
 	}
 
@@ -227,29 +226,26 @@ int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result) {
 	n = recv(connstruct->socket, &cmdcode, 1, MSG_WAITALL);
 	if (n != 1) {
 		connstruct->last_error = RERR_OP_RECV_OPCODE;
-		free(msg);
 		return RERR_OP_RECV_OPCODE;
 	}
 
 	result->msgcode = cmdcode;
 
 	if(result->msg != NULL) {
-		free(result->msg);
+		g_free(result->msg);
 		result->msg = NULL;
 	}
 	/* Receive additional data, if such exists. */
 	if(length>1) {
-		result->msg = malloc(length-1);
+		result->msg = g_malloc(length-1);
 		n = recv(connstruct->socket, result->msg, length-1, MSG_WAITALL);
 		if (n != length-1) {
 			connstruct->last_error = RERR_OP_RECV_DATA;
-			free(msg);
-			free(result->msg);
+			g_free(result->msg);
 			return RERR_OP_RECV_DATA;
 		}
 	}
 
-	free(msg);
 	return 0;
 }
 
@@ -288,12 +284,12 @@ char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets) {
 
 	/* Received correct response */
 	if(res.msgcode == RPB_LIST_BUCKETS_RESP) {
-		bucketsResp = rpb_list_buckets_resp__unpack(NULL, res.length-1, (uint8_t *)res.msg);
+		bucketsResp = rpb_list_buckets_resp__unpack(NULL, res.length-1, res.msg);
 
 		*n_buckets = bucketsResp->n_buckets;
-		bucketList = malloc(*n_buckets*sizeof(char*));
+		bucketList = g_malloc(*n_buckets*sizeof(char*));
 		for(i=0; i<*n_buckets; i++) {
-			bucketList[i] = malloc(bucketsResp->buckets[i].len+1);
+			bucketList[i] = g_malloc(bucketsResp->buckets[i].len+1);
 			memcpy(bucketList[i], bucketsResp->buckets[i].data, bucketsResp->buckets[i].len);
 			bucketList[i][bucketsResp->buckets[i].len] = '\0';
 		}
@@ -301,7 +297,7 @@ char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets) {
 		rpb_list_buckets_resp__free_unpacked(bucketsResp, NULL);
 	/* Riak reported an error */
 	} else if(res.msgcode == RPB_ERROR_RESP) {
-		errorResp = rpb_error_resp__unpack(NULL, res.length-1, (uint8_t *)res.msg);
+		errorResp = rpb_error_resp__unpack(NULL, res.length-1, res.msg);
 
 		connstruct->last_error = RERR_BUCKET_LIST;
 		riak_copy_error(connstruct, errorResp);
@@ -312,7 +308,7 @@ char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets) {
 		connstruct->last_error = RERR_UNKNOWN;
 	}
 
-	free(res.msg);
+	g_free(res.msg);
 
 	return bucketList;
 }
@@ -359,7 +355,7 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, void *userdata) {
 	size_t nwrite = size * nmemb;
 	if (data->pointer + nwrite > data->bufsize) {
 		data->bufsize *= 2;
-		data->buffer = realloc(data->buffer, data->bufsize);
+		data->buffer = g_realloc(data->buffer, data->bufsize);
 	}
 	memcpy(data->buffer+data->pointer, ptr, nwrite);
 	data->pointer += nwrite;
@@ -428,7 +424,7 @@ int riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data) {
 }
 
 int riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem) {
-	char address[1024];
+	char *address;
 	CURLcode res;
 	struct buffered_char rdata;
 	CURL * curl = connstruct->curlh;
@@ -439,8 +435,8 @@ int riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char
 	if((key == NULL)||(elem == NULL))
 		return 1;
 
-	sprintf(address, "%s/riak/%s/%s",
-			connstruct->addr, bucket_urlenc, key_urlenc);
+	address = g_strdup_printf("%s/riak/%s/%s",
+							  connstruct->addr, bucket_urlenc, key_urlenc);
 
 	free(bucket_urlenc);
 	free(key_urlenc);
@@ -461,6 +457,8 @@ int riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char
 	curl_easy_setopt(curl, CURLOPT_READDATA, NULL);
 	curl_easy_setopt(curl, CURLOPT_INFILESIZE, 0);
 
+	g_free(address);
+
 	return res;
 }
 
@@ -470,7 +468,6 @@ int riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object
 
 #define GET_BUFSIZE (8 * 1024)
 char * riak_getb_raw(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen) {
-	char address[1024];
 	CURLcode res;
 	struct buffered_char rdata;
 	CURL * curl = connstruct->curlh;
@@ -479,12 +476,13 @@ char * riak_getb_raw(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, ch
 	char * bucket_urlenc = url_encode_bin(bucket, bucketlen);
 	char * key_urlenc = url_encode_bin(key, keylen);
 
-	sprintf(address, "%s/riak/%s/%s", addr, bucket_urlenc, key_urlenc);
+	char *address = g_strdup_printf("%s/riak/%s/%s",
+									addr, bucket_urlenc, key_urlenc);
 
-	free(bucket_urlenc);
-	free(key_urlenc);
+	g_free(bucket_urlenc);
+	g_free(key_urlenc);
 
-	rdata.buffer = malloc(GET_BUFSIZE);
+	rdata.buffer = g_malloc(GET_BUFSIZE);
 	rdata.bufsize = GET_BUFSIZE;
 	rdata.pointer = 0;
 
@@ -498,6 +496,7 @@ char * riak_getb_raw(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, ch
 
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, NULL);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, stdout);
+	g_free(address);
 
 	if (res != 0) {
 		return NULL;
@@ -513,27 +512,28 @@ char * riak_get_raw(RIAK_CONN * connstruct, char * bucket, char * key) {
 }
 
 int riak_delb(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen) {
-	CURL * curl = connstruct->curlh;
 	CURLcode res;
-	char address[1024];
 
 	char * bucket_urlenc = url_encode_bin(bucket, bucketlen);
 	char * key_urlenc = url_encode_bin(key, keylen);
 
-	sprintf(address, "%s/riak/%s/%s", connstruct->addr, bucket_urlenc, key_urlenc);
+	char *address = g_strdup_printf("%s/riak/%s/%s",
+									connstruct->addr,
+									bucket_urlenc, key_urlenc);
 
-	free(bucket_urlenc);
-	free(key_urlenc);
+	g_free(bucket_urlenc);
+	g_free(key_urlenc);
 
-	curl_easy_setopt(curl, CURLOPT_URL, address);
-	curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-	curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
-	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
-	curl_easy_setopt(curl, CURLOPT_HEADER, 0L);
+	curl_easy_setopt(connstruct->curlh, CURLOPT_URL, address);
+	curl_easy_setopt(connstruct->curlh, CURLOPT_HTTPGET, 1L);
+	curl_easy_setopt(connstruct->curlh, CURLOPT_NOBODY, 1L);
+	curl_easy_setopt(connstruct->curlh, CURLOPT_CUSTOMREQUEST, "DELETE");
+	curl_easy_setopt(connstruct->curlh, CURLOPT_HEADER, 0L);
 
-	res = curl_easy_perform(curl);
+	res = curl_easy_perform(connstruct->curlh);
 
-	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, NULL);
+	curl_easy_setopt(connstruct->curlh, CURLOPT_CUSTOMREQUEST, NULL);
+	g_free(address);
 
 	return res;
 }
@@ -547,7 +547,6 @@ json_object ** riak_get_json_mapred(RIAK_CONN * connstruct, char * mapred_statem
 	int i, j, offset, counter, offset_mem;
 	char buffer[4096];
 	char *retbuffer;
-	char address[1024];
 	char *startp, *endp;
 	CURLcode res;
 	struct curl_slist * headerlist = NULL;
@@ -559,14 +558,14 @@ json_object ** riak_get_json_mapred(RIAK_CONN * connstruct, char * mapred_statem
 	if((mapred_statement == NULL)||(ret_len == NULL))
 		return NULL;
 
-	sprintf(address, "http://%s/mapred", addr);
+	char * address = g_strdup_printf("%s/mapred", addr);
 
 	headerlist = curl_slist_append(headerlist, "Content-type: application/json");
 
 	strcpy(buffer, mapred_statement);
 
-	retbuffer = malloc(GET_BUFSIZE);
-	retdata = malloc(sizeof(struct buffered_char));
+	retbuffer = g_malloc(GET_BUFSIZE);
+	retdata = g_malloc(sizeof(struct buffered_char));
 	retdata->buffer = retbuffer;
 	retdata->bufsize = GET_BUFSIZE;
 	retdata->pointer = 0;
@@ -580,6 +579,9 @@ json_object ** riak_get_json_mapred(RIAK_CONN * connstruct, char * mapred_statem
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
 
 	res = curl_easy_perform(curl);
+
+	g_free(address);
+
 	if (res != 0) {
 		return NULL;
 	}
@@ -604,7 +606,7 @@ json_object ** riak_get_json_mapred(RIAK_CONN * connstruct, char * mapred_statem
 		(*ret_len)++;
 	}
 	offset = offset_mem;
-	retTab = calloc(*ret_len, sizeof(json_object*));
+	retTab = g_new0(json_object *, *ret_len);
 	j=0;
 	while(offset<i) {
 		startp = retdata->buffer+offset;
@@ -623,7 +625,7 @@ json_object ** riak_get_json_mapred(RIAK_CONN * connstruct, char * mapred_statem
 		offset++;
 	}
 
-	free(retdata);
+	g_free(retdata);
 	curl_slist_free_all(headerlist);
 
 	return retTab;
@@ -642,8 +644,8 @@ char * riak_get_raw_rs(RIAK_CONN * connstruct, char * query) {
 
 	sprintf(address, "http://%s/solr/%s", addr, query);
 
-	retdata = malloc(sizeof(struct buffered_char));
-	retbuffer = malloc(GET_BUFSIZE);
+	retdata = g_malloc(sizeof(struct buffered_char));
+	retbuffer = g_malloc(GET_BUFSIZE);
 	retdata->buffer = retbuffer;
 	retdata->bufsize = GET_BUFSIZE;
 	retdata->pointer = 0;

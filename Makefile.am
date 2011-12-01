@@ -1,3 +1,5 @@
+INCLUDES= @GLIB_CFLAGS@
+
 lib_LTLIBRARIES = libriakdrv.la
 libriakdrv_la_SOURCES =\
  riakdrv.c\
@@ -15,7 +17,7 @@ pkgconfig_DATA = riak-c-driver.pc
 
 check_PROGRAMS = test
 test_SOURCES = test.c
-test_LDADD = libriakdrv.la @PROTOBUFC_LIBS@ @CURL_LIBS@ @JSON_LIBS@
+test_LDADD = libriakdrv.la @GLIB_LIBS@ @PROTOBUFC_LIBS@ @CURL_LIBS@ @JSON_LIBS@
 
 EXTRA_DIST = riak-c-driver.pc.in riak-c-driver.spec.in
 

@@ -1,6 +1,7 @@
 #include "urlcode.h"
 
 #include <ctype.h>
+#include <glib.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -19,7 +20,7 @@ char to_hex(int code) {
 /* IMPORTANT: be sure to free() the returned string after use */
 char *url_encode_bin(char *str, unsigned long strl) {
   unsigned char *pstr = (unsigned char *) str;
-  char *buf = malloc(strl * 3 + 1);
+  char *buf = g_malloc(strl * 3 + 1);
   unsigned char *pbuf = (unsigned char *) buf;
   while (pstr < (unsigned char *)str + strl) {
     if (isalnum(*pstr) || *pstr == '-' || *pstr == '_' || *pstr == '.' || *pstr == '~') 
@@ -34,7 +35,7 @@ char *url_encode_bin(char *str, unsigned long strl) {
 
 char *url_encode(char *str) {
   unsigned char *pstr = (unsigned char *) str;
-  char *buf = malloc(strlen(str) * 3 + 1);
+  char *buf = g_malloc(strlen(str) * 3 + 1);
   unsigned char *pbuf = (unsigned char *) buf;
   while (*pstr) {
     if (isalnum(*pstr) || *pstr == '-' || *pstr == '_' || *pstr == '.' || *pstr == '~') 
@@ -51,7 +52,7 @@ char *url_encode(char *str) {
 /* IMPORTANT: be sure to free() the returned string after use */
 char *url_decode(char *str) {
   unsigned char *pstr = (unsigned char *) str;
-  char *buf = malloc(strlen(str) + 1);
+  char *buf = g_malloc(strlen(str) + 1);
   unsigned char *pbuf = (unsigned char *) buf;
   while (*pstr) {
     if (*pstr == '%') {
