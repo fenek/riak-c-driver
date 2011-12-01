@@ -154,7 +154,6 @@ RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port) {
 		{
 			struct curl_slist * headerlist =
 				curl_slist_append(NULL, "Content-type: application/json");
-			curl_easy_setopt(connstruct->curlh, CURLOPT_HEADER, 1L);
 			curl_easy_setopt(connstruct->curlh, CURLOPT_HTTPHEADER, headerlist);
 			connstruct->curl_headers = headerlist;
 		}
@@ -431,9 +430,8 @@ int riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data) {
 int riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem) {
 	char address[1024];
 	CURLcode res;
-	struct buffered_char data;
+	struct buffered_char rdata;
 	CURL * curl = connstruct->curlh;
-	char * addr = connstruct->addr;
 
 	char * bucket_urlenc = url_encode_bin(bucket, bucketlen);
 	char * key_urlenc = url_encode_bin(key, keylen);
@@ -441,20 +439,21 @@ int riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char
 	if((key == NULL)||(elem == NULL))
 		return 1;
 
-	sprintf(address, "%s/riak/%s/%s", addr, bucket_urlenc, key_urlenc);
+	sprintf(address, "%s/riak/%s/%s",
+			connstruct->addr, bucket_urlenc, key_urlenc);
 
 	free(bucket_urlenc);
 	free(key_urlenc);
 
-	data.buffer = (char*)json_object_to_json_string(elem);
-	data.pointer = 0;
+	rdata.buffer = (char*)json_object_to_json_string(elem);
+	rdata.pointer = 0;
 
 	curl_easy_setopt(curl, CURLOPT_URL, address);
 	curl_easy_setopt(curl, CURLOPT_PUT, 1L);
 	curl_easy_setopt(curl, CURLOPT_HEADER, 0L);
 	curl_easy_setopt(curl, CURLOPT_READFUNCTION, readfunc);
-	curl_easy_setopt(curl, CURLOPT_READDATA, &data);
-	curl_easy_setopt(curl, CURLOPT_INFILESIZE, strlen(data.buffer));
+	curl_easy_setopt(curl, CURLOPT_READDATA, &rdata);
+	curl_easy_setopt(curl, CURLOPT_INFILESIZE, strlen(rdata.buffer));
 
 	res = curl_easy_perform(curl);
 
