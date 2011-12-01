@@ -41,6 +41,8 @@ typedef struct {
 	char * addr;
 	/** cURL handle */
 	CURL * curlh;
+	/** cURL headers */
+	struct curl_slist * curl_headers;
 	/** Socket descriptor for Protocol Buffers connection */
 	int socket;
 	/** Error code of last operation. Codes can be found in riakerrors.h */
@@ -65,24 +67,29 @@ typedef struct {
 
 /* --------------------------- FUNCTIONS DEFINITIONS --------------------------- */
 
-/** \fn RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port, RIAK_CONN * connstruct)
+/** \fn RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port)
  *  \brief Create new handle.
  *
  * This function creates new Riak handle. It contains both TCP socket for operations using Protocol Buffers
  * and CURL handle for operations like using Riak Search.
  *
- * WARNING!
- * If connstruct!=NULL, this function will assume that it doesn't describe open connection anyway, therefore
- * will overwrite all values inside structure.
- *
  * @param hostname string containing address where Riak server can be accessed, e.g. 127.0.0.1
  * @param pb_port port where Protocol Buffers API is available, e.g. 8087; may be 0, in such case PB operations won't be available
  * @param curl_port port where HTTP server is available, e.g. 8089; may be 0, in such case HTTP operations won't be available
- * @param connstruct structure for holding Riak connection data; when NULL - new structure will be allocated
  *
  * @return handle to Riak connection; if connstruct != NULL, then connstruct is returned; returns NULL on error
  */
-RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port, RIAK_CONN * connstruct);
+RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port);
+
+/** \fn void riak_close(RIAK_CONN * connstruct)
+ *  \brief Closes connection to Riak.
+ *
+ *  This function ends cURL session, closes TCP socket and frees connstruct,
+ *  so this structure can't be used after calling this function.
+ *
+ *  @param connstruct connection structure to be closed and freed.
+ */
+void riak_close(RIAK_CONN * connstruct);
 
 /** \fn int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result)
  * 	\brief Executes Riak operation via Protocol Buffers socket and receives response.
@@ -132,11 +139,12 @@ char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets);
  *  @param bucket name of the bucket for data
  *  @param key key for passed value
  *  @param elem JSON structure which should be inserted
+ *	@return 0 on success, nonzero on failure
  */
 
 int riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data);
 
-void riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem);
+int riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem);
 
 /** \fn void riak_putb_json(char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem)
  *  \brief Puts JSON data into DB.
@@ -150,22 +158,20 @@ void riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_objec
  *  @param key key for passed value
  *  @param keylen length of the key
  *  @param elem JSON structure which should be inserted
+ *	@return 0 on success, nonzero on failure
  */
 
-void riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem);
+int riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem);
+
+extern char * riak_getb_raw(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen);
+
+extern char * riak_get_raw(RIAK_CONN * connstruct, char * bucket, char * key);
+
+extern int riak_delb(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen);
+extern int riak_del(RIAK_CONN * connstruct, char * bucket, char * key);
 
 json_object ** riak_get_json_mapred(RIAK_CONN * connstruct, char * mapred_statement, int *ret_len);
 char * riak_get_raw_rs(RIAK_CONN * connstruct, char * query);
-
-/** \fn void riak_close(RIAK_CONN * connstruct)
- *  \brief Closes connection to Riak.
- *
- *  This function ends cURL session, closes TCP socket and frees connstruct,
- *  so this structure can't be used after calling this function.
- *
- *  @param connstruct connection structure to be closed and freed.
- */
-void riak_close(RIAK_CONN * connstruct);
 
 /*
  * Local Variables:
