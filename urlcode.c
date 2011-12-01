@@ -50,9 +50,9 @@ char *url_encode(char *str) {
 /* Returns a url-decoded version of str */
 /* IMPORTANT: be sure to free() the returned string after use */
 char *url_decode(char *str) {
-  unsigned char *pstr = str;
+  unsigned char *pstr = (unsigned char *) str;
   char *buf = malloc(strlen(str) + 1);
-  unsigned char *pbuf = buf;
+  unsigned char *pbuf = (unsigned char *) buf;
   while (*pstr) {
     if (*pstr == '%') {
       if (pstr[1] && pstr[2]) {
