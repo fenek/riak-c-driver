@@ -24,6 +24,11 @@
 #include <sys/types.h>
 #include "riakdrv.h"
 
+#define STR_SIZE(a) a, sizeof(a)-1
+#define BUCKET "riak-c-driver"
+#define KEY1 "t1"
+#define KEY2 "embedded\0nulls\1"
+
 int main() {
 	RIAK_CONN * conn;
 	char ** buckets;
@@ -68,7 +73,7 @@ int main() {
 		json_object_object_add(json_obj, "answer",
 							   json_object_new_int(42));
 		printf("data: %s\n", json_object_to_json_string(json_obj));
-		res = riak_put_json(conn, "riak-c-driver", "t1", json_obj);
+		res = riak_put_json(conn, BUCKET, KEY1, json_obj);
 		json_object_put(json_obj);
 		if (res != 0) {
 			printf("Error code: %d\n", res);
@@ -77,16 +82,48 @@ int main() {
 
 	printf("Getting data:\n");
 	{
-		char * data = riak_get_raw(conn, "riak-c-driver", "t1");
+		char * data = riak_get_raw(conn, BUCKET, KEY1);
 		printf("data: %s\n", data);
 		free(data);
 	}
 
+#if 1
 	printf("Deleting record:\n");
-	res = riak_del(conn, "riak-c-driver", "t1");
+	res = riak_del(conn, BUCKET, KEY1);
 	if (res != 0) {
 		printf("Error code: %d\n", res);
 	}
+#endif
+
+	printf("Putting data:\n");
+	{
+		json_object *json_obj = json_object_new_object();
+		json_object_object_add(json_obj, "data",
+							   json_object_new_string("hello world"));
+		json_object_object_add(json_obj, "answer",
+							   json_object_new_int(42));
+		printf("data: %s\n", json_object_to_json_string(json_obj));
+		res = riak_putb_json(conn, STR_SIZE(BUCKET), STR_SIZE(KEY2), json_obj);
+		json_object_put(json_obj);
+		if (res != 0) {
+			printf("Error code: %d\n", res);
+		}
+	}
+
+	printf("Getting data:\n");
+	{
+		char * data = riak_getb_raw(conn, STR_SIZE(BUCKET), STR_SIZE(KEY2));
+		printf("data: %s\n", data);
+		free(data);
+	}
+
+#if 1
+	printf("Deleting record:\n");
+	res = riak_delb(conn, STR_SIZE(BUCKET), STR_SIZE(KEY2));
+	if (res != 0) {
+		printf("Error code: %d\n", res);
+	}
+#endif
 
 	printf("Closing connection... ");
 	riak_close(conn);
