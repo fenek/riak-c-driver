@@ -145,7 +145,7 @@ riak_get_raw(RIAK_CONN * connstruct, char * bucket, char * key, GError ** error)
 
 extern int
 riak_delb(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, GError ** error);
-extern
+extern int
 riak_del(RIAK_CONN * connstruct, char * bucket, char * key, GError ** error);
 
 json_object ** riak_get_json_mapred(RIAK_CONN * connstruct, char * mapred_statement, int *ret_len);

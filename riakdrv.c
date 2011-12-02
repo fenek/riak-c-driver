@@ -87,18 +87,17 @@ typedef struct {
  * @param errorResp Protocol Buffers structure containing Riak error response
  */
 int riak_copy_error(GError **error, RIAK_OP * res) {
-	if (error == NULL)
-		return;
-
 	if (res->msgcode == RPB_ERROR_RESP) {
-		RpbErrorResp * errorResp =
-			rpb_error_resp__unpack(NULL, res->msglen, res->msg);
+		if (error != NULL) {
+			RpbErrorResp * errorResp =
+				rpb_error_resp__unpack(NULL, res->msglen, res->msg);
 
-		g_set_error(error, RIAK_CDRIVER_ERROR, RIAK_CDRIVER_ERROR_RIAK_ERROR,
-					"Riak error: (%X) %.*s", errorResp->errcode,
-					errorResp->errmsg.len, errorResp->errmsg.data);
+			g_set_error(error, RIAK_CDRIVER_ERROR, RIAK_CDRIVER_ERROR_RIAK_ERROR,
+						"Riak error: (%X) %.*s", errorResp->errcode,
+						(int) errorResp->errmsg.len, errorResp->errmsg.data);
 
-		rpb_error_resp__free_unpacked(errorResp, NULL);
+			rpb_error_resp__free_unpacked(errorResp, NULL);
+		}
 		return RIAK_CDRIVER_ERROR_RIAK_ERROR;
 	} else {
 		g_set_error(error, RIAK_CDRIVER_ERROR, RIAK_CDRIVER_ERROR_RIAK_UNEXPECTED,
@@ -126,7 +125,7 @@ RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port, GError **erro
 		server = gethostbyname(hostname);
 		if (server == NULL) {
 			g_set_error(error, RIAK_CDRIVER_ERROR, RIAK_CDRIVER_ERROR_HOSTNAME,
-						"hostname \"%s\" lookup failed: $s", hostname, g_strerror(errno));
+						"hostname \"%s\" lookup failed: %s", hostname, g_strerror(errno));
 			goto error;
 		}
 		bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -447,12 +446,12 @@ int riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char
 
 	put_content.value.data =
 		/* Cast away const */ (uint8_t *) json_object_to_json_string(elem);
-	put_content.value.len = strlen(put_content.value.data);
+	put_content.value.len = strlen((char *) put_content.value.data);
 
 	put_req.bucket.len = bucketlen;
-	put_req.bucket.data = bucket;
+	put_req.bucket.data = (uint8_t *) bucket;
 	put_req.key.len = keylen;
-	put_req.key.data = key;
+	put_req.key.data = (uint8_t *) key;
 	put_req.content = &put_content;
 
 	command.msgcode = RPB_PUT_REQ;
@@ -493,9 +492,9 @@ char * riak_getb_raw(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, ch
 		return NULL;
 
 	get_req.bucket.len = bucketlen;
-	get_req.bucket.data = bucket;
+	get_req.bucket.data = (uint8_t *) bucket;
 	get_req.key.len = keylen;
-	get_req.key.data = key;
+	get_req.key.data = (uint8_t *) key;
 
 	command.msgcode = RPB_GET_REQ;
 	command.msglen = rpb_get_req__get_packed_size(&get_req);

@@ -1,4 +1,5 @@
-INCLUDES= @GLIB_CFLAGS@
+INCLUDES = @GLIB_CFLAGS@
+AM_CFLAGS = -Wall
 
 lib_LTLIBRARIES = libriakdrv.la
 libriakdrv_la_SOURCES =\
