@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/uio.h>
 #include <unistd.h>
 
 #include "riakdrv.h"
@@ -187,61 +188,86 @@ void riak_close(RIAK_CONN * connstruct) {
 	g_free(connstruct);
 }
 
+/**
+ * \brief Riak operation structure.
+ *
+ * This structure serves both as place for request data and response data.
+ */
+typedef struct {
+	/** Message code. Defined in Riak API, also respective defines are in riakcodes.h. */
+	__uint32_t msgcode;
+	/** Length of msg message buffer. */
+	__uint32_t msglen;
+	/** Additional message data. Should be NULL if request doesn't pass any additional data. */
+	__uint8_t * msg;
+} RIAK_OP;
+
+
+struct riak_pb_header {
+	uint32_t length;
+	uint8_t message_code;
+	uint8_t padding[3];
+};
+#define RIAK_PB_HEADER_SIZE 5
+#define RIAK_MESSAGE_CODE_SIZE 1
+
+/** \fn int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result)
+ * 	\brief Executes Riak operation via Protocol Buffers socket and receives response.
+ *
+ * This is universal function for executing Riak operations and receiving responses. It is a wrapper
+ * for socket operations. Ultimately, user shouldn't have to use this function because other functions
+ * are to cover all possible operations. Still, probably this function will remain in library API even then.
+ *
+ * @param connstruct connection handle
+ * @param command command to be sent to Riak
+ * @param result structure for response; this function won't allocate space and won't check if result structure exists!
+ *
+ * @return 0 if success, error code > 0 when failure
+ */
 int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result) {
-	__uint32_t length;
-	__uint8_t cmdcode;
-	int n;
-	char * msg;
+	struct iovec iovw[2];
+	struct riak_pb_header hdrw, hdrr;
+	ssize_t n;
 
 	connstruct->last_error = RERR_OK;
+	result->msglen = 0;
+	result->msg = NULL;
 
-	/* Preparing message for sending */
-	msg = g_alloca(4+command->length);
-	length = htonl(command->length);
-	memcpy(msg, &length, 4);
+	/* Prepare message for sending. */
+	hdrw.length = htonl(command->msglen + RIAK_MESSAGE_CODE_SIZE);
+	hdrw.message_code = command->msgcode;
 
-	msg[4] = command->msgcode;
+	iovw[0].iov_base = &hdrw;
+	iovw[0].iov_len = 5;
+	iovw[1].iov_base = command->msg;
+	iovw[1].iov_len = command->msglen;
 
-	if(command->length > 1)
-		memcpy(msg+5, command->msg, command->length-1);
-
-	/* Sending message! */
-	n = write(connstruct->socket,msg,4+command->length);
-	if (n != 4+command->length) {
+	/* Send message. */
+	n = writev(connstruct->socket, iovw, 2);
+	if (n != iovw[0].iov_len + iovw[1].iov_len) {
 		connstruct->last_error = RERR_OP_SEND;
 		return RERR_OP_SEND;
 	}
 
-	/* Receive response length */
-	n = recv(connstruct->socket, &length, 4, MSG_WAITALL);
-	if (n != 4) {
+	/* Receive response length and command code. */
+	n = recv(connstruct->socket, &hdrr, RIAK_PB_HEADER_SIZE, MSG_WAITALL);
+	if (n != RIAK_PB_HEADER_SIZE) {
 		connstruct->last_error = RERR_OP_RECV_LEN;
 		return RERR_OP_RECV_LEN;
 	}
 
-	length = ntohl(length);
-	result->length = length;
+	result->msgcode = hdrr.message_code;
+	result->msglen = ntohl(hdrr.length) - RIAK_MESSAGE_CODE_SIZE;
 
-	/* Receive message code */
-	n = recv(connstruct->socket, &cmdcode, 1, MSG_WAITALL);
-	if (n != 1) {
-		connstruct->last_error = RERR_OP_RECV_OPCODE;
-		return RERR_OP_RECV_OPCODE;
-	}
-
-	result->msgcode = cmdcode;
-
-	if(result->msg != NULL) {
-		g_free(result->msg);
-		result->msg = NULL;
-	}
-	/* Receive additional data, if such exists. */
-	if(length>1) {
-		result->msg = g_malloc(length-1);
-		n = recv(connstruct->socket, result->msg, length-1, MSG_WAITALL);
-		if (n != length-1) {
+	/* Receive message data, if such exists. */
+	if(result->msglen>0) {
+		result->msg = g_malloc(result->msglen);
+		n = recv(connstruct->socket, result->msg, result->msglen, MSG_WAITALL);
+		if (n != result->msglen) {
 			connstruct->last_error = RERR_OP_RECV_DATA;
 			g_free(result->msg);
+			result->msglen = 0;
+			result->msg = NULL;
 			return RERR_OP_RECV_DATA;
 		}
 	}
@@ -252,10 +278,9 @@ int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result) {
 int riak_ping(RIAK_CONN * connstruct) {
 	RIAK_OP command, res;
 
-	command.length = 1;
 	command.msgcode = RPB_PING_REQ;
+	command.msglen = 0;
 	command.msg = NULL;
-	res.msg = NULL;
 
 	connstruct->last_error = RERR_OK;
 
@@ -272,10 +297,9 @@ char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets) {
 	int i;
 	char ** bucketList = NULL;
 
-	command.length = 1;
 	command.msgcode = RPB_LIST_BUCKETS_REQ;
+	command.msglen = 0;
 	command.msg = NULL;
-	res.msg = NULL;
 
 	connstruct->last_error = RERR_OK;
 
@@ -284,7 +308,7 @@ char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets) {
 
 	/* Received correct response */
 	if(res.msgcode == RPB_LIST_BUCKETS_RESP) {
-		bucketsResp = rpb_list_buckets_resp__unpack(NULL, res.length-1, res.msg);
+		bucketsResp = rpb_list_buckets_resp__unpack(NULL, res.msglen, res.msg);
 
 		*n_buckets = bucketsResp->n_buckets;
 		bucketList = g_malloc(*n_buckets*sizeof(char*));
@@ -297,7 +321,7 @@ char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets) {
 		rpb_list_buckets_resp__free_unpacked(bucketsResp, NULL);
 	/* Riak reported an error */
 	} else if(res.msgcode == RPB_ERROR_RESP) {
-		errorResp = rpb_error_resp__unpack(NULL, res.length-1, res.msg);
+		errorResp = rpb_error_resp__unpack(NULL, res.msglen, res.msg);
 
 		connstruct->last_error = RERR_BUCKET_LIST;
 		riak_copy_error(connstruct, errorResp);
@@ -442,12 +466,10 @@ int riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char
 	put_req.key.data = key;
 	put_req.content = &put_content;
 
-	command.length = rpb_put_req__get_packed_size(&put_req) + 1;
-	command.msg = g_alloca(command.length);
 	command.msgcode = RPB_PUT_REQ;
+	command.msglen = rpb_put_req__get_packed_size(&put_req);
+	command.msg = g_alloca(command.msglen);
 	rpb_put_req__pack(&put_req, command.msg);
-
-	res.msg = NULL;
 
 	r = riak_exec_op(connstruct, &command, &res);
 

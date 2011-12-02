@@ -51,20 +51,6 @@ typedef struct {
 	char * error_msg;
 } RIAK_CONN;
 
-/**
- * \brief Riak operation structure.
- *
- * This structure serves both as place for request data and response data.
- */
-typedef struct {
-	/** Length of command. Equals length of msg + 1 (1 byte for msg code). */
-	__uint32_t length;
-	/** Message code. Defined in Riak API, also respective defines are in riakcodes.h. */
-	__uint8_t msgcode;
-	/** Additional message data. Should be NULL if request doesn't pass any additional data. */
-	__uint8_t * msg;
-} RIAK_OP;
-
 /* --------------------------- FUNCTIONS DEFINITIONS --------------------------- */
 
 /** \fn RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port)
@@ -90,21 +76,6 @@ RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port);
  *  @param connstruct connection structure to be closed and freed.
  */
 void riak_close(RIAK_CONN * connstruct);
-
-/** \fn int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result)
- * 	\brief Executes Riak operation via Protocol Buffers socket and receives response.
- *
- * This is universal function for executing Riak operations and receiving responses. It is a wrapper
- * for socket operations. Ultimately, user shouldn't have to use this function because other functions
- * are to cover all possible operations. Still, probably this function will remain in library API even then.
- *
- * @param connstruct connection handle
- * @param command command to be sent to Riak
- * @param result structure for response; this function won't allocate space and won't check if result structure exists!
- *
- * @return 0 if success, error code > 0 when failure
- */
-int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result);
 
 /**	\fn int riak_ping(RIAK_CONN * connstruct)
  *	\brief Pings Riak server.
