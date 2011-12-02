@@ -293,7 +293,6 @@ int riak_ping(RIAK_CONN * connstruct) {
 char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets) {
 	RIAK_OP command, res;
 	RpbListBucketsResp * bucketsResp;
-	RpbErrorResp * errorResp;
 	int i;
 	char ** bucketList = NULL;
 
@@ -321,7 +320,8 @@ char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets) {
 		rpb_list_buckets_resp__free_unpacked(bucketsResp, NULL);
 	/* Riak reported an error */
 	} else if(res.msgcode == RPB_ERROR_RESP) {
-		errorResp = rpb_error_resp__unpack(NULL, res.msglen, res.msg);
+		RpbErrorResp * errorResp =
+			rpb_error_resp__unpack(NULL, res.msglen, res.msg);
 
 		connstruct->last_error = RERR_BUCKET_LIST;
 		riak_copy_error(connstruct, errorResp);
@@ -453,7 +453,7 @@ int riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char
 	RpbContent put_content = RPB_CONTENT__INIT;
 	int r;
 
-	if((key == NULL)||(elem == NULL))
+	if(bucket == NULL || key == NULL || elem == NULL)
 		return 1;
 
 	put_content.value.data =
@@ -484,43 +484,65 @@ int riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object
 
 #define GET_BUFSIZE (8 * 1024)
 char * riak_getb_raw(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen) {
-	CURLcode res;
-	struct buffered_char rdata;
-	CURL * curl = connstruct->curlh;
-	char * addr = connstruct->addr;
+	RIAK_OP command, res;
+	RpbGetReq get_req = RPB_GET_REQ__INIT;
+	RpbGetResp * get_resp;
+	char * rdata = NULL;
+	int r;
 
-	char * bucket_urlenc = url_encode_bin(bucket, bucketlen);
-	char * key_urlenc = url_encode_bin(key, keylen);
+	if(bucket == NULL || key == NULL)
+		return NULL;
 
-	char *address = g_strdup_printf("%s/riak/%s/%s",
-									addr, bucket_urlenc, key_urlenc);
+	get_req.bucket.len = bucketlen;
+	get_req.bucket.data = bucket;
+	get_req.key.len = keylen;
+	get_req.key.data = key;
 
-	g_free(bucket_urlenc);
-	g_free(key_urlenc);
+	command.msgcode = RPB_GET_REQ;
+	command.msglen = rpb_get_req__get_packed_size(&get_req);
+	command.msg = g_alloca(command.msglen);
+	rpb_get_req__pack(&get_req, command.msg);
 
-	rdata.buffer = g_malloc(GET_BUFSIZE);
-	rdata.bufsize = GET_BUFSIZE;
-	rdata.pointer = 0;
+	r = riak_exec_op(connstruct, &command, &res);
 
-	curl_easy_setopt(curl, CURLOPT_URL, address);
-	curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &rdata);
-	curl_easy_setopt(curl, CURLOPT_HEADER, 0L);
-
-	res = curl_easy_perform(curl);
-
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, NULL);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, stdout);
-	g_free(address);
-
-	if (res != 0) {
+	if (r != 0) {
 		return NULL;
 	}
 
-	rdata.buffer[rdata.pointer] = '\0';
+	if (res.msgcode == RPB_GET_RESP) {
+		int i;
+		size_t content_len, content_offset;
+		get_resp = rpb_get_resp__unpack(NULL, res.msglen, res.msg);
+		for (content_len = 0, i = 0; i < get_resp->n_content; i++) {
+			content_len += get_resp->content[i]->value.len;
+		}
+		rdata = g_malloc(content_len + 1);
+		for (content_offset = 0, i = 0; i < get_resp->n_content; i++) {
+			memcpy(rdata + content_offset,
+				   get_resp->content[i]->value.data,
+				   get_resp->content[i]->value.len);
+			content_offset += get_resp->content[i]->value.len;
+		}
+		rpb_get_resp__free_unpacked(get_resp, NULL);
+		rdata[content_offset] = '\0';
+	} else if (res.msgcode == RPB_ERROR_RESP) {
+		/* Riak reported an error. */
+		RpbErrorResp * errorResp =
+			rpb_error_resp__unpack(NULL, res.msglen, res.msg);
 
-	return rdata.buffer;
+		connstruct->last_error = RERR_BUCKET_LIST;
+		riak_copy_error(connstruct, errorResp);
+
+		rpb_error_resp__free_unpacked(errorResp, NULL);
+
+	} else {
+		/* Something really bad happened. :( */
+		connstruct->last_error = RERR_UNKNOWN;
+	}
+
+	g_free(res.msg);
+
+	return rdata;
 }
 
 char * riak_get_raw(RIAK_CONN * connstruct, char * bucket, char * key) {
