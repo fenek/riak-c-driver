@@ -72,7 +72,7 @@ int main() {
 							   json_object_new_string("hello world"));
 		json_object_object_add(json_obj, "answer",
 							   json_object_new_int(42));
-		printf("data: %s\n", json_object_to_json_string(json_obj));
+		printf("data: >%s<\n", json_object_to_json_string(json_obj));
 		res = riak_put_json(conn, BUCKET, KEY1, json_obj);
 		json_object_put(json_obj);
 		if (res != 0) {
@@ -83,8 +83,12 @@ int main() {
 	printf("Getting data:\n");
 	{
 		char * data = riak_get_raw(conn, BUCKET, KEY1);
-		printf("data: %s\n", data);
-		free(data);
+		if (data == NULL) {
+			printf("error: %s\n", conn->error_msg);
+		} else {
+			printf("data: >%s<\n", data);
+			free(data);
+		}
 	}
 
 #if 1
@@ -95,14 +99,25 @@ int main() {
 	}
 #endif
 
+	printf("Getting data:\n");
+	{
+		char * data = riak_get_raw(conn, BUCKET, KEY1);
+		if (data == NULL) {
+			printf("error: %s\n", conn->error_msg);
+		} else {
+			printf("data: >%s<\n", data);
+			free(data);
+		}
+	}
+
 	printf("Putting data:\n");
 	{
 		json_object *json_obj = json_object_new_object();
 		json_object_object_add(json_obj, "data",
-							   json_object_new_string("hello world"));
+							   json_object_new_string("goodnight moon"));
 		json_object_object_add(json_obj, "answer",
-							   json_object_new_int(42));
-		printf("data: %s\n", json_object_to_json_string(json_obj));
+							   json_object_new_int(117));
+		printf("data: >%s<\n", json_object_to_json_string(json_obj));
 		res = riak_putb_json(conn, STR_SIZE(BUCKET), STR_SIZE(KEY2), json_obj);
 		json_object_put(json_obj);
 		if (res != 0) {
@@ -113,8 +128,12 @@ int main() {
 	printf("Getting data:\n");
 	{
 		char * data = riak_getb_raw(conn, STR_SIZE(BUCKET), STR_SIZE(KEY2));
-		printf("data: %s\n", data);
-		free(data);
+		if (data == NULL) {
+			printf("error: %s\n", conn->error_msg);
+		} else {
+			printf("data: >%s<\n", data);
+			free(data);
+		}
 	}
 
 #if 1
