@@ -424,42 +424,36 @@ int riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data) {
 }
 
 int riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem) {
-	char *address;
-	CURLcode res;
-	struct buffered_char rdata;
-	CURL * curl = connstruct->curlh;
-
-	char * bucket_urlenc = url_encode_bin(bucket, bucketlen);
-	char * key_urlenc = url_encode_bin(key, keylen);
+	RIAK_OP command, res;
+	RpbPutReq put_req = RPB_PUT_REQ__INIT;
+	RpbContent put_content = RPB_CONTENT__INIT;
+	int r;
 
 	if((key == NULL)||(elem == NULL))
 		return 1;
 
-	address = g_strdup_printf("%s/riak/%s/%s",
-							  connstruct->addr, bucket_urlenc, key_urlenc);
+	put_content.value.data =
+		/* Cast away const */ (uint8_t *) json_object_to_json_string(elem);
+	put_content.value.len = strlen(put_content.value.data);
 
-	free(bucket_urlenc);
-	free(key_urlenc);
+	put_req.bucket.len = bucketlen;
+	put_req.bucket.data = bucket;
+	put_req.key.len = keylen;
+	put_req.key.data = key;
+	put_req.content = &put_content;
 
-	rdata.buffer = (char*)json_object_to_json_string(elem);
-	rdata.pointer = 0;
+	command.length = rpb_put_req__get_packed_size(&put_req) + 1;
+	command.msg = g_alloca(command.length);
+	command.msgcode = RPB_PUT_REQ;
+	rpb_put_req__pack(&put_req, command.msg);
 
-	curl_easy_setopt(curl, CURLOPT_URL, address);
-	curl_easy_setopt(curl, CURLOPT_PUT, 1L);
-	curl_easy_setopt(curl, CURLOPT_HEADER, 0L);
-	curl_easy_setopt(curl, CURLOPT_READFUNCTION, readfunc);
-	curl_easy_setopt(curl, CURLOPT_READDATA, &rdata);
-	curl_easy_setopt(curl, CURLOPT_INFILESIZE, strlen(rdata.buffer));
+	res.msg = NULL;
 
-	res = curl_easy_perform(curl);
+	r = riak_exec_op(connstruct, &command, &res);
 
-	curl_easy_setopt(curl, CURLOPT_READFUNCTION, NULL);
-	curl_easy_setopt(curl, CURLOPT_READDATA, NULL);
-	curl_easy_setopt(curl, CURLOPT_INFILESIZE, 0);
+	g_free(res.msg);
 
-	g_free(address);
-
-	return res;
+	return r;
 }
 
 int riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem) {
