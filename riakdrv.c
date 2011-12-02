@@ -84,12 +84,9 @@ void riak_copy_error(RIAK_CONN * connstruct, RpbErrorResp * errorResp) {
 
 	if(connstruct->error_msg != NULL)
 		g_free(connstruct->error_msg);
-	connstruct->error_msg = g_malloc(errorResp->errmsg.len+1+sizeof(errorResp->errcode)*2+4);
-	tmp = g_malloc(errorResp->errmsg.len);
-	memcpy(tmp, errorResp->errmsg.data, errorResp->errmsg.len);
-	tmp[errorResp->errmsg.len] = '\0';
-	sprintf(connstruct->error_msg, "(%X): %s", errorResp->errcode, tmp);
-	g_free(tmp);
+	connstruct->error_msg =
+		g_strdup_printf("(%X): %.*s", errorResp->errcode,
+						errorResp->errmsg.len, errorResp->errmsg.data);
 }
 
 RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port) {
@@ -184,6 +181,10 @@ void riak_close(RIAK_CONN * connstruct) {
 	if (connstruct->socket > 0) {
 		close(connstruct->socket);
 		connstruct->socket = 0;
+	}
+	if (connstruct->error_msg != NULL) {
+		g_free(connstruct->error_msg);
+		connstruct->error_msg = NULL;
 	}
 	g_free(connstruct);
 }
