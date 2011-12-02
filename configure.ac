@@ -1,4 +1,4 @@
-AC_INIT([riak-c-driver], [0.3.0])
+AC_INIT([riak-c-driver], [0.4.0])
 AM_INIT_AUTOMAKE([foreign])
 
 AC_PROG_CC
