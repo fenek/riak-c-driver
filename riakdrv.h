@@ -25,11 +25,12 @@
 
 #define __RIAKDRV_H__
 
+#include <curl/curl.h>
+#include <glib.h>
 #include <json/json_object.h>
 #include <sys/types.h>
-#include <curl/curl.h>
 
-#include "riakerrors.h"
+#define RIAKDRV_ERROR "riakdrv"
 
 /* --------------------------- STRUCTURE DEFINITIONS --------------------------- */
 
@@ -44,11 +45,7 @@ typedef struct {
 	/** cURL headers */
 	struct curl_slist * curl_headers;
 	/** Socket descriptor for Protocol Buffers connection */
-	int socket;
-	/** Error code of last operation. Codes can be found in riakerrors.h */
-	int last_error;
-	/** Riak internal error message. Only some operations return this message. Format: "(err code in hex): err msg" */
-	char * error_msg;
+	int sockfd;
 } RIAK_CONN;
 
 /* --------------------------- FUNCTIONS DEFINITIONS --------------------------- */
@@ -65,7 +62,8 @@ typedef struct {
  *
  * @return handle to Riak connection; if connstruct != NULL, then connstruct is returned; returns NULL on error
  */
-RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port);
+extern RIAK_CONN *
+riak_init(char * hostname, int pb_port, int curl_port, GError ** error);
 
 /** \fn void riak_close(RIAK_CONN * connstruct)
  *  \brief Closes connection to Riak.
@@ -86,7 +84,8 @@ void riak_close(RIAK_CONN * connstruct);
  *
  * @return 0 if success, not 0 on error
 */
-int riak_ping(RIAK_CONN * connstruct);
+extern int
+riak_ping(RIAK_CONN * connstruct, GError ** error);
 
 /**	\fn char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets)
  *	\brief Fetches list of buckets.
@@ -99,7 +98,8 @@ int riak_ping(RIAK_CONN * connstruct);
  *
  * @return array (of n_buckets length) of null-terminated strings; NULL on error
  */
-char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets);
+extern char **
+riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets, GError ** error);
 
 /** \fn void riak_put_json(char * bucket, char * key, json_object * elem)
  *  \brief Puts JSON data into DB.
@@ -113,9 +113,11 @@ char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets);
  *	@return 0 on success, nonzero on failure
  */
 
-int riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data);
+extern int
+riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data);
 
-int riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem);
+extern int
+riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem, GError ** error);
 
 /** \fn void riak_putb_json(char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem)
  *  \brief Puts JSON data into DB.
@@ -132,17 +134,41 @@ int riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object
  *	@return 0 on success, nonzero on failure
  */
 
-int riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem);
+extern int
+riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem, GError ** error);
 
-extern char * riak_getb_raw(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen);
+extern char *
+riak_getb_raw(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, GError ** error);
 
-extern char * riak_get_raw(RIAK_CONN * connstruct, char * bucket, char * key);
+extern char *
+riak_get_raw(RIAK_CONN * connstruct, char * bucket, char * key, GError ** error);
 
-extern int riak_delb(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen);
-extern int riak_del(RIAK_CONN * connstruct, char * bucket, char * key);
+extern int
+riak_delb(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, GError ** error);
+extern
+riak_del(RIAK_CONN * connstruct, char * bucket, char * key, GError ** error);
 
 json_object ** riak_get_json_mapred(RIAK_CONN * connstruct, char * mapred_statement, int *ret_len);
 char * riak_get_raw_rs(RIAK_CONN * connstruct, char * query);
+
+typedef enum {
+	RIAK_CDRIVER_ERROR_OK = 0,
+	RIAK_CDRIVER_ERROR_UNKNOWN,			/* Generic unknown error. */
+	/* Errors for riak_init */
+	RIAK_CDRIVER_ERROR_SOCKET,			/* Socket creation error. */
+	RIAK_CDRIVER_ERROR_HOSTNAME,		/* Hostname resolution error. */
+	RIAK_CDRIVER_ERROR_PB_CONNECT,		/* Couldn't connect to PB socket. */
+	RIAK_CDRIVER_ERROR_CURL_INIT,		/* Couldn't initialize cURL handle. */
+	/* Errors for riak_exec_op */
+	RIAK_CDRIVER_ERROR_OP_SEND,			/* Error sending to PB socket. */
+	RIAK_CDRIVER_ERROR_OP_RECV_HDR,		/* Error receiving header from PB. */
+	RIAK_CDRIVER_ERROR_OP_RECV_DATA,	/* Error receiving data from PB */
+	/* Errors from Riak. */
+	RIAK_CDRIVER_ERROR_RIAK_ERROR,
+	RIAK_CDRIVER_ERROR_RIAK_UNEXPECTED,
+	/* Generic error return from cURL. */
+	RIAK_CDRIVER_ERROR_CURL_ERROR,
+} RiakCDriverError;
 
 /*
  * Local Variables:

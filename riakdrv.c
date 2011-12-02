@@ -21,6 +21,7 @@
  *      Company: Erlang Solutions Ltd.
  */
 
+#include <errno.h>
 #include <glib.h>
 #include <json/json_tokener.h>
 #include <netdb.h>
@@ -38,22 +39,6 @@
 #include "riakproto/riakmessages.pb-c.h"
 #include "riakproto/riakcodes.h"
 
-const char * (RIAK_ERR_MSGS[]) = {
-		"Success",
-		/* Errors for riak_init */
-		"Socket creation error",
-		"Can't fetch host name",
-		"Couldn't connect to PB socket",
-		"Couldn't initialize cURL handle",
-		/* Errors for riak_exec_op */
-		"Error when sending data via PB socket",
-		"Error when receiving length of response via PB socket",
-		"Error when receiving command code via PB socket",
-		"Error when receiving command message via PB socket",
-		/* Errors for riak_list_buckets */
-		"Error when fetching bucket list"
-};
-
 /**
  * \brief Helper structure for exchanging data with cURL.
  */
@@ -69,6 +54,28 @@ struct buffered_char {
 /** We should initialize cURL only once so this is the flag indicating whether initialization is necessary. */
 int first_time = 1;
 
+/* GError Quark for riakdrv. */
+#define RIAK_CDRIVER_ERROR riak_cdriver_error_quark()
+
+GQuark riak_cdriver_error_quark(void)
+{
+	return g_quark_from_static_string("riak-cdriver-error-quark");
+}
+
+/**
+ * \brief Riak operation structure.
+ *
+ * This structure serves both as place for request data and response data.
+ */
+typedef struct {
+	/** Message code. Defined in Riak API, also respective defines are in riakcodes.h. */
+	__uint32_t msgcode;
+	/** Length of msg message buffer. */
+	__uint32_t msglen;
+	/** Additional message data. Should be NULL if request doesn't pass any additional data. */
+	__uint8_t * msg;
+} RIAK_OP;
+
 /**	\fn void riak_copy_error(RIAK_CONN * connstruct, RpbErrorResp * errorResp)
  * 	\brief Helper function for copying error message from PB structure to RIAK_CONN.
  *
@@ -79,53 +86,58 @@ int first_time = 1;
  * @param connstruct Riak connection handle
  * @param errorResp Protocol Buffers structure containing Riak error response
  */
-void riak_copy_error(RIAK_CONN * connstruct, RpbErrorResp * errorResp) {
-	char * tmp;
+int riak_copy_error(GError **error, RIAK_OP * res) {
+	if (error == NULL)
+		return;
 
-	if(connstruct->error_msg != NULL)
-		g_free(connstruct->error_msg);
-	connstruct->error_msg =
-		g_strdup_printf("(%X): %.*s", errorResp->errcode,
-						errorResp->errmsg.len, errorResp->errmsg.data);
+	if (res->msgcode == RPB_ERROR_RESP) {
+		RpbErrorResp * errorResp =
+			rpb_error_resp__unpack(NULL, res->msglen, res->msg);
+
+		g_set_error(error, RIAK_CDRIVER_ERROR, RIAK_CDRIVER_ERROR_RIAK_ERROR,
+					"Riak error: (%X) %.*s", errorResp->errcode,
+					errorResp->errmsg.len, errorResp->errmsg.data);
+
+		rpb_error_resp__free_unpacked(errorResp, NULL);
+		return RIAK_CDRIVER_ERROR_RIAK_ERROR;
+	} else {
+		g_set_error(error, RIAK_CDRIVER_ERROR, RIAK_CDRIVER_ERROR_RIAK_UNEXPECTED,
+					"unexpected Riak message %d", res->msgcode);
+		return RIAK_CDRIVER_ERROR_RIAK_UNEXPECTED;
+	}
 }
 
-RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port) {
-	int sockfd;
+RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port, GError **error) {
 	struct sockaddr_in serv_addr;
 	struct hostent *server;
 
-	RIAK_CONN * connstruct = g_malloc(sizeof(RIAK_CONN));
-
-	connstruct->last_error = RERR_OK;
-	connstruct->error_msg = NULL;
+	RIAK_CONN * connstruct = g_new0(RIAK_CONN, 1);
+	connstruct->sockfd = -1;
 
 	/* Protocol Buffers part */
 	if(pb_port != 0) {
-		sockfd = socket(AF_INET, SOCK_STREAM, 0);
-		if (sockfd < 0) {
-			connstruct->last_error = RERR_SOCKET;
-			close(sockfd);
-			return connstruct;
+		connstruct->sockfd = socket(AF_INET, SOCK_STREAM, 0);
+		if (connstruct->sockfd < 0) {
+			g_set_error(error, RIAK_CDRIVER_ERROR, RIAK_CDRIVER_ERROR_SOCKET,
+						"socket failed: %s", g_strerror(errno));
+			goto error;
 		}
+
 		server = gethostbyname(hostname);
 		if (server == NULL) {
-			connstruct->last_error = RERR_HOSTNAME;
-			close(sockfd);
-			return connstruct;
+			g_set_error(error, RIAK_CDRIVER_ERROR, RIAK_CDRIVER_ERROR_HOSTNAME,
+						"hostname \"%s\" lookup failed: $s", hostname, g_strerror(errno));
+			goto error;
 		}
 		bzero((char *) &serv_addr, sizeof(serv_addr));
 		serv_addr.sin_family = AF_INET;
 		bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
 		serv_addr.sin_port = htons(pb_port);
-		if (connect(sockfd,(const struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0) {
-			connstruct->last_error = RERR_PB_CONNECT;
-			close(sockfd);
-			return connstruct;
+		if (connect(connstruct->sockfd,(const struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0) {
+			g_set_error(error, RIAK_CDRIVER_ERROR, RIAK_CDRIVER_ERROR_PB_CONNECT,
+						"connect %s:%d failed: %s", hostname, pb_port, g_strerror(errno));
+			goto error;
 		}
-
-		connstruct->socket = sockfd;
-	} else {
-		connstruct->socket = 0;
 	}
 
 	/* cURL part */
@@ -143,12 +155,9 @@ RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port) {
 		strcpy(connstruct->addr, buffer);
 		g_free(buffer);
 		if((connstruct->curlh = curl_easy_init()) == NULL) {
-			if(connstruct->socket != 0) {
-				close(connstruct->socket);
-				g_free(connstruct->addr);
-				connstruct->last_error = RERR_CURL_INIT;
-				return connstruct;
-			}
+			g_set_error(error, RIAK_CDRIVER_ERROR, RIAK_CDRIVER_ERROR_CURL_INIT,
+						"curl initialization failed");
+			goto error;
 		}
 		{
 			struct curl_slist * headerlist =
@@ -156,13 +165,14 @@ RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port) {
 			curl_easy_setopt(connstruct->curlh, CURLOPT_HTTPHEADER, headerlist);
 			connstruct->curl_headers = headerlist;
 		}
-
-	} else {
-		connstruct->addr = NULL;
-		connstruct->curlh = NULL;
-		connstruct->curl_headers = NULL;
 	}
+
 	return connstruct;
+
+error:
+	if (connstruct->sockfd >= 0) { close(connstruct->sockfd); }
+	g_free(connstruct);
+	return NULL;
 }
 
 void riak_close(RIAK_CONN * connstruct) {
@@ -178,31 +188,12 @@ void riak_close(RIAK_CONN * connstruct) {
 		curl_slist_free_all(connstruct->curl_headers);
 		connstruct->curl_headers = NULL;
 	}
-	if (connstruct->socket > 0) {
-		close(connstruct->socket);
-		connstruct->socket = 0;
-	}
-	if (connstruct->error_msg != NULL) {
-		g_free(connstruct->error_msg);
-		connstruct->error_msg = NULL;
+	if (connstruct->sockfd > 0) {
+		close(connstruct->sockfd);
+		connstruct->sockfd = 0;
 	}
 	g_free(connstruct);
 }
-
-/**
- * \brief Riak operation structure.
- *
- * This structure serves both as place for request data and response data.
- */
-typedef struct {
-	/** Message code. Defined in Riak API, also respective defines are in riakcodes.h. */
-	__uint32_t msgcode;
-	/** Length of msg message buffer. */
-	__uint32_t msglen;
-	/** Additional message data. Should be NULL if request doesn't pass any additional data. */
-	__uint8_t * msg;
-} RIAK_OP;
-
 
 struct riak_pb_header {
 	uint32_t length;
@@ -225,12 +216,11 @@ struct riak_pb_header {
  *
  * @return 0 if success, error code > 0 when failure
  */
-int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result) {
+int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result, GError **error) {
 	struct iovec iovw[2];
 	struct riak_pb_header hdrw, hdrr;
 	ssize_t n;
 
-	connstruct->last_error = RERR_OK;
 	result->msglen = 0;
 	result->msg = NULL;
 
@@ -244,17 +234,19 @@ int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result) {
 	iovw[1].iov_len = command->msglen;
 
 	/* Send message. */
-	n = writev(connstruct->socket, iovw, 2);
+	n = writev(connstruct->sockfd, iovw, 2);
 	if (n != iovw[0].iov_len + iovw[1].iov_len) {
-		connstruct->last_error = RERR_OP_SEND;
-		return RERR_OP_SEND;
+		g_set_error(error, RIAK_CDRIVER_ERROR, RIAK_CDRIVER_ERROR_OP_SEND,
+					"riak pb write failed: %s",  g_strerror(errno));
+		return RIAK_CDRIVER_ERROR_OP_SEND;
 	}
 
 	/* Receive response length and command code. */
-	n = recv(connstruct->socket, &hdrr, RIAK_PB_HEADER_SIZE, MSG_WAITALL);
+	n = recv(connstruct->sockfd, &hdrr, RIAK_PB_HEADER_SIZE, MSG_WAITALL);
 	if (n != RIAK_PB_HEADER_SIZE) {
-		connstruct->last_error = RERR_OP_RECV_LEN;
-		return RERR_OP_RECV_LEN;
+		g_set_error(error, RIAK_CDRIVER_ERROR, RIAK_CDRIVER_ERROR_OP_RECV_HDR,
+					"riak pb read failed: %s",  g_strerror(errno));
+		return RIAK_CDRIVER_ERROR_OP_RECV_HDR;
 	}
 
 	result->msgcode = hdrr.message_code;
@@ -263,35 +255,42 @@ int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result) {
 	/* Receive message data, if such exists. */
 	if(result->msglen>0) {
 		result->msg = g_malloc(result->msglen);
-		n = recv(connstruct->socket, result->msg, result->msglen, MSG_WAITALL);
+		n = recv(connstruct->sockfd, result->msg, result->msglen, MSG_WAITALL);
 		if (n != result->msglen) {
-			connstruct->last_error = RERR_OP_RECV_DATA;
+			g_set_error(error, RIAK_CDRIVER_ERROR, RIAK_CDRIVER_ERROR_OP_RECV_DATA,
+						"riak pb read failed: %s",  g_strerror(errno));
 			g_free(result->msg);
 			result->msglen = 0;
 			result->msg = NULL;
-			return RERR_OP_RECV_DATA;
+			return RIAK_CDRIVER_ERROR_OP_RECV_DATA;
 		}
 	}
 
 	return 0;
 }
 
-int riak_ping(RIAK_CONN * connstruct) {
+int riak_ping(RIAK_CONN * connstruct, GError **error) {
 	RIAK_OP command, res;
 
 	command.msgcode = RPB_PING_REQ;
 	command.msglen = 0;
 	command.msg = NULL;
 
-	connstruct->last_error = RERR_OK;
-
-	if(riak_exec_op(connstruct, &command, &res) != 0)
+	if(riak_exec_op(connstruct, &command, &res, error) != 0)
 		return 1;
 
-	return (res.msgcode != RPB_PING_RESP);
+	if (res.msgcode == RPB_PING_RESP) {
+		; /* Received correct response. */
+	} else {
+		/* Riak reported an error or unexpected response. */
+		riak_copy_error(error, &res);
+	}
+	g_free(res.msg);
+
+	return res.msgcode != RPB_PING_RESP;
 }
 
-char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets) {
+char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets, GError **error) {
 	RIAK_OP command, res;
 	RpbListBucketsResp * bucketsResp;
 	int i;
@@ -301,13 +300,11 @@ char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets) {
 	command.msglen = 0;
 	command.msg = NULL;
 
-	connstruct->last_error = RERR_OK;
-
-	if(riak_exec_op(connstruct, &command, &res)!=0)
+	if(riak_exec_op(connstruct, &command, &res, error)!=0)
 		return NULL;
 
-	/* Received correct response */
 	if(res.msgcode == RPB_LIST_BUCKETS_RESP) {
+		/* Received correct response. */
 		bucketsResp = rpb_list_buckets_resp__unpack(NULL, res.msglen, res.msg);
 
 		*n_buckets = bucketsResp->n_buckets;
@@ -319,18 +316,9 @@ char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets) {
 		}
 
 		rpb_list_buckets_resp__free_unpacked(bucketsResp, NULL);
-	/* Riak reported an error */
 	} else if(res.msgcode == RPB_ERROR_RESP) {
-		RpbErrorResp * errorResp =
-			rpb_error_resp__unpack(NULL, res.msglen, res.msg);
-
-		connstruct->last_error = RERR_BUCKET_LIST;
-		riak_copy_error(connstruct, errorResp);
-
-		rpb_error_resp__free_unpacked(errorResp, NULL);
-	/* Something really bad happened. :( */
-	} else {
-		connstruct->last_error = RERR_UNKNOWN;
+		/* Riak reported an error or unexpected response. */
+		riak_copy_error(error, &res);
 	}
 
 	g_free(res.msg);
@@ -448,7 +436,7 @@ int riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data) {
 	return 0;
 }
 
-int riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem) {
+int riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem, GError **error) {
 	RIAK_OP command, res;
 	RpbPutReq put_req = RPB_PUT_REQ__INIT;
 	RpbContent put_content = RPB_CONTENT__INIT;
@@ -472,19 +460,29 @@ int riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char
 	command.msg = g_alloca(command.msglen);
 	rpb_put_req__pack(&put_req, command.msg);
 
-	r = riak_exec_op(connstruct, &command, &res);
+	r = riak_exec_op(connstruct, &command, &res, error);
+	if (r != 0) {
+		return r;
+	}
+
+	if (res.msgcode == RPB_PUT_RESP) {
+		; /* Received correct response. */
+	} else {
+		/* Riak reported an error or unexpected response. */
+		r = riak_copy_error(error, &res);
+	}
 
 	g_free(res.msg);
 
 	return r;
 }
 
-int riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem) {
-	return riak_putb_json(connstruct, bucket, strlen(bucket), key, strlen(key), elem);
+int riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem, GError **error) {
+	return riak_putb_json(connstruct, bucket, strlen(bucket), key, strlen(key), elem, error);
 }
 
 #define GET_BUFSIZE (8 * 1024)
-char * riak_getb_raw(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen) {
+char * riak_getb_raw(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, GError **error) {
 	RIAK_OP command, res;
 	RpbGetReq get_req = RPB_GET_REQ__INIT;
 	RpbGetResp * get_resp;
@@ -504,7 +502,7 @@ char * riak_getb_raw(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, ch
 	command.msg = g_alloca(command.msglen);
 	rpb_get_req__pack(&get_req, command.msg);
 
-	r = riak_exec_op(connstruct, &command, &res);
+	r = riak_exec_op(connstruct, &command, &res, error);
 
 	if (r != 0) {
 		return NULL;
@@ -526,19 +524,9 @@ char * riak_getb_raw(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, ch
 		}
 		rpb_get_resp__free_unpacked(get_resp, NULL);
 		rdata[content_offset] = '\0';
-	} else if (res.msgcode == RPB_ERROR_RESP) {
-		/* Riak reported an error. */
-		RpbErrorResp * errorResp =
-			rpb_error_resp__unpack(NULL, res.msglen, res.msg);
-
-		connstruct->last_error = RERR_BUCKET_LIST;
-		riak_copy_error(connstruct, errorResp);
-
-		rpb_error_resp__free_unpacked(errorResp, NULL);
-
 	} else {
-		/* Something really bad happened. :( */
-		connstruct->last_error = RERR_UNKNOWN;
+		/* Riak reported an error or unexpected response. */
+		r = riak_copy_error(error, &res);
 	}
 
 	g_free(res.msg);
@@ -546,11 +534,11 @@ char * riak_getb_raw(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, ch
 	return rdata;
 }
 
-char * riak_get_raw(RIAK_CONN * connstruct, char * bucket, char * key) {
-	return riak_getb_raw(connstruct, bucket, strlen(bucket), key, strlen(key));
+char * riak_get_raw(RIAK_CONN * connstruct, char * bucket, char * key, GError **error) {
+	return riak_getb_raw(connstruct, bucket, strlen(bucket), key, strlen(key), error);
 }
 
-int riak_delb(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen) {
+int riak_delb(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, GError **error) {
 	CURLcode res;
 
 	char * bucket_urlenc = url_encode_bin(bucket, bucketlen);
@@ -571,6 +559,11 @@ int riak_delb(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * ke
 
 	res = curl_easy_perform(connstruct->curlh);
 
+	if (res != 0) {
+		g_set_error(error, RIAK_CDRIVER_ERROR, RIAK_CDRIVER_ERROR_CURL_ERROR,
+					"curl error: %d",  res);
+	}
+
 	curl_easy_setopt(connstruct->curlh, CURLOPT_CUSTOMREQUEST, NULL);
 	g_free(address);
 
@@ -578,8 +571,8 @@ int riak_delb(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * ke
 }
 
 
-int riak_del(RIAK_CONN * connstruct, char * bucket, char * key) {
-	return riak_delb(connstruct, bucket, strlen(bucket), key, strlen(key));
+int riak_del(RIAK_CONN * connstruct, char * bucket, char * key, GError **error) {
+	return riak_delb(connstruct, bucket, strlen(bucket), key, strlen(key), error);
 }
 
 json_object ** riak_get_json_mapred(RIAK_CONN * connstruct, char * mapred_statement, int *ret_len) {

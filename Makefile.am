@@ -10,7 +10,7 @@ libriakdrv_la_SOURCES =\
  urlcode.h
 EXTRA_libriakdrv_la_SOURCES = riakproto/riakmessages.proto
 libriakdrv_la_LDFLAGS = -version-number $(subst .,:,$(VERSION))
-include_HEADERS = riakdrv.h riakerrors.h
+include_HEADERS = riakdrv.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = riak-c-driver.pc
