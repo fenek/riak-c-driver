@@ -15,7 +15,7 @@
 \begin{DoxyCompactItemize}
 \item 
 struct \hyperlink{structbuffered__char}{buffered\_\-char}
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Helper structure for exchanging data with cURL. \item\end{DoxyCompactList}\end{DoxyCompactItemize}
 \subsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
@@ -36,8 +36,6 @@ size\_\-t \hyperlink{riakdrv_8c_ab9f8a870e233a2768ff1b6a4af3a7362}{writefunc} (v
 void \hyperlink{riakdrv_8c_ad0615f1f92010db78712cd2a06ac5147}{riak\_\-put\_\-json} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, char $\ast$bucket, char $\ast$key, json\_\-object $\ast$elem)
 \item 
 json\_\-object $\ast$$\ast$ \hyperlink{riakdrv_8c_a6fc65357610dd512f9ebdba67d559e0d}{riak\_\-get\_\-json\_\-mapred} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, char $\ast$mapred\_\-statement, int $\ast$ret\_\-len)
-\item 
-json\_\-object $\ast$$\ast$ \hyperlink{riakdrv_8c_ae5963885b42dac3fe0d840f20f38aebd}{riak\_\-get\_\-json\_\-rs} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, char $\ast$mapred\_\-statement, int $\ast$ret\_\-len)
 \item 
 char $\ast$ \hyperlink{riakdrv_8c_ab267dbfa3510535367f80bfcef4768f3}{riak\_\-get\_\-raw\_\-rs} (\hyperlink{structRIAK__CONN}{RIAK\_\-CONN} $\ast$connstruct, char $\ast$query)
 \item 
@@ -146,17 +144,6 @@ This is universal function for executing Riak operations and receiving responses
 \end{DoxyParamCaption}
 )}}
 \label{riakdrv_8c_a6fc65357610dd512f9ebdba67d559e0d}
-\hypertarget{riakdrv_8c_ae5963885b42dac3fe0d840f20f38aebd}{
-\index{riakdrv.c@{riakdrv.c}!riak\_\-get\_\-json\_\-rs@{riak\_\-get\_\-json\_\-rs}}
-\index{riak\_\-get\_\-json\_\-rs@{riak\_\-get\_\-json\_\-rs}!riakdrv.c@{riakdrv.c}}
-\subsubsection[{riak\_\-get\_\-json\_\-rs}]{\setlength{\rightskip}{0pt plus 5cm}json\_\-object$\ast$$\ast$ riak\_\-get\_\-json\_\-rs (
-\begin{DoxyParamCaption}
-\item[{{\bf RIAK\_\-CONN} $\ast$}]{ connstruct, }
-\item[{char $\ast$}]{ mapred\_\-statement, }
-\item[{int $\ast$}]{ ret\_\-len}
-\end{DoxyParamCaption}
-)}}
-\label{riakdrv_8c_ae5963885b42dac3fe0d840f20f38aebd}
 \hypertarget{riakdrv_8c_ab267dbfa3510535367f80bfcef4768f3}{
 \index{riakdrv.c@{riakdrv.c}!riak\_\-get\_\-raw\_\-rs@{riak\_\-get\_\-raw\_\-rs}}
 \index{riak\_\-get\_\-raw\_\-rs@{riak\_\-get\_\-raw\_\-rs}!riakdrv.c@{riakdrv.c}}
@@ -280,3 +267,4 @@ amount of data copied
 \index{first\_\-time@{first\_\-time}!riakdrv.c@{riakdrv.c}}
 \subsubsection[{first\_\-time}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf first\_\-time} = 1}}
 \label{riakdrv_8c_a2251ba55279aef307357d4b82d7cffb7}
+We should initialize cURL only once so this is the flag indicating whether initialization is necessary. 

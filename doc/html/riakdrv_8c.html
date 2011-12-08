@@ -66,6 +66,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <tr><td colspan="2"><h2><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">struct &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structbuffered__char.html">buffered_char</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Helper structure for exchanging data with cURL.  <a href="structbuffered__char.html#_details">More...</a><br/></td></tr>
 <tr><td colspan="2"><h2><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8c.html#ad73478538b7df19e22214b1817277274">riak_copy_error</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, RpbErrorResp *errorResp)</td></tr>
@@ -84,7 +85,6 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Helper function for cURL, writes data to buffer.  <a href="#ab9f8a870e233a2768ff1b6a4af3a7362"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8c.html#ad0615f1f92010db78712cd2a06ac5147">riak_put_json</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, char *bucket, char *key, json_object *elem)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">json_object **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8c.html#a6fc65357610dd512f9ebdba67d559e0d">riak_get_json_mapred</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, char *mapred_statement, int *ret_len)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">json_object **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8c.html#ae5963885b42dac3fe0d840f20f38aebd">riak_get_json_rs</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, char *mapred_statement, int *ret_len)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8c.html#ab267dbfa3510535367f80bfcef4768f3">riak_get_raw_rs</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, char *query)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8c.html#ac2cbf23402be266af0dbc121819276ca">riak_close</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Closes connection to Riak.  <a href="#ac2cbf23402be266af0dbc121819276ca"></a><br/></td></tr>
@@ -131,7 +131,7 @@ Variables</h2></td></tr>
 <div class="memdoc">
 
 <p>Helper function for cURL, reads data from buffer. </p>
-<p>This is helper function for cURL, which takes userdata and ptr (internal field where cURL stores data to be sent) and then copies contents of userdata to ptr. This function assumes that userdata is of type struct <a class="el" href="structbuffered__char.html">buffered_char</a>.</p>
+<p>This is helper function for cURL, which takes userdata and ptr (internal field where cURL stores data to be sent) and then copies contents of userdata to ptr. This function assumes that userdata is of type struct <a class="el" href="structbuffered__char.html" title="Helper structure for exchanging data with cURL.">buffered_char</a>.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>ptr</em>&nbsp;</td><td>internal cURL location </td></tr>
@@ -260,39 +260,6 @@ Variables</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">json_object** riak_get_json_mapred </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *&nbsp;</td>
-          <td class="paramname"> <em>connstruct</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">char *&nbsp;</td>
-          <td class="paramname"> <em>mapred_statement</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int *&nbsp;</td>
-          <td class="paramname"> <em>ret_len</em></td><td>&nbsp;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td><td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="ae5963885b42dac3fe0d840f20f38aebd"></a><!-- doxytag: member="riakdrv.c::riak_get_json_rs" ref="ae5963885b42dac3fe0d840f20f38aebd" args="(RIAK_CONN *connstruct, char *mapred_statement, int *ret_len)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">json_object** riak_get_json_rs </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *&nbsp;</td>
           <td class="paramname"> <em>connstruct</em>, </td>
@@ -543,7 +510,7 @@ Variables</h2></td></tr>
 <div class="memdoc">
 
 <p>Helper function for cURL, writes data to buffer. </p>
-<p>This is helper function for cURL, which takes userdata and ptr (internal field where cURL stores data received) and then copies contents of ptr to userdata. This function assumes that userdata is of type struct <a class="el" href="structbuffered__char.html">buffered_char</a>.</p>
+<p>This is helper function for cURL, which takes userdata and ptr (internal field where cURL stores data received) and then copies contents of ptr to userdata. This function assumes that userdata is of type struct <a class="el" href="structbuffered__char.html" title="Helper structure for exchanging data with cURL.">buffered_char</a>.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>ptr</em>&nbsp;</td><td>internal cURL location </td></tr>
@@ -568,6 +535,7 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+<p>We should initialize cURL only once so this is the flag indicating whether initialization is necessary. </p>
 
 </div>
 </div>

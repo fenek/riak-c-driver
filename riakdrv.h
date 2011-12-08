@@ -1,4 +1,19 @@
 /*
+ *  Copyright 2011 Piotr Nosek & Erlang Solutions Ltd.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ *
  * riakdrv.h
  *
  *  Created on: 18-01-2011
@@ -119,7 +134,10 @@ char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets);
  *  @param elem JSON structure which should be inserted
  */
 
+int riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data);
+
 void riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem);
+
 json_object ** riak_get_json_mapred(RIAK_CONN * connstruct, char * mapred_statement, int *ret_len);
 char * riak_get_raw_rs(RIAK_CONN * connstruct, char * query);
 

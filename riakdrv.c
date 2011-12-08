@@ -1,4 +1,19 @@
 /*
+ *  Copyright 2011 Piotr Nosek & Erlang Solutions Ltd.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ *
  * riakdrv.c
  *
  *  Created on: 18-01-2011
@@ -295,6 +310,66 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, void *userdata) {
 	data->pointer += size*nmemb;
 
 	return size*nmemb;
+}
+
+int riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data) {
+	RpbPutReq putReq;
+	RpbContent content;
+	RpbPutResp * putResp;
+	RpbErrorResp * errorResp;
+	int reqSize;
+	char * buffer;
+	RIAK_OP command, result;
+
+	rpb_put_req__init(&putReq);
+	rpb_content__init(&content);
+
+	putReq.bucket.data = bucket;
+	putReq.bucket.len = strlen(bucket);
+	putReq.key.data = key;
+	putReq.key.len = strlen(key);
+	content.value.data = data;
+	content.value.len = strlen(data);
+	content.links = NULL;
+	content.usermeta = NULL;
+	putReq.content = &content;
+
+	reqSize = rpb_put_req__get_packed_size(&putReq);
+	buffer = malloc(reqSize);
+	rpb_put_req__pack(&putReq,buffer);
+
+	command.msgcode = RPB_PUT_REQ;
+	command.msg = buffer;
+	command.length = reqSize+1;
+	result.msg = NULL;
+
+	connstruct->last_error = RERR_OK;
+
+	if(riak_exec_op(connstruct, &command, &result)!=0)
+		return 1;
+
+	/* Received correct response */
+	if(result.msgcode == RPB_PUT_RESP) {
+		/* not used right now */
+		/*putResp = rpb_put_resp__unpack(NULL, result.length-1, result.msg);
+
+		rpb_put_resp__free_unpacked(putResp, NULL);*/
+		/* Riak reported an error */
+	} else if(result.msgcode == RPB_ERROR_RESP) {
+		errorResp = rpb_error_resp__unpack(NULL, result.length-1, result.msg);
+
+		connstruct->last_error = RERR_BUCKET_LIST;
+		riak_copy_error(connstruct, errorResp);
+
+		rpb_error_resp__free_unpacked(errorResp, NULL);
+		return 1;
+		/* Something really bad happened. :( */
+	} else {
+		connstruct->last_error = RERR_UNKNOWN;
+		return 1;
+	}
+
+	return 0;
 }
 
 void riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem) {

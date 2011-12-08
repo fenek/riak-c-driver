@@ -77,7 +77,6 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Fetches list of buckets.  <a href="#a974a652ca95fdfa26eb7bda6f1c0b08f"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8h.html#ad0615f1f92010db78712cd2a06ac5147">riak_put_json</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, char *bucket, char *key, json_object *elem)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">json_object **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8h.html#a6fc65357610dd512f9ebdba67d559e0d">riak_get_json_mapred</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, char *mapred_statement, int *ret_len)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">json_object **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8h.html#acc59796ce2fc0518131240e2244ad2f2">riak_get_json_rs</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, char *query, int *ret_len)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8h.html#ab267dbfa3510535367f80bfcef4768f3">riak_get_raw_rs</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct, char *query)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="riakdrv_8h.html#ac2cbf23402be266af0dbc121819276ca">riak_close</a> (<a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *connstruct)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Closes connection to Riak.  <a href="#ac2cbf23402be266af0dbc121819276ca"></a><br/></td></tr>
@@ -170,39 +169,6 @@ Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">char *&nbsp;</td>
           <td class="paramname"> <em>mapred_statement</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int *&nbsp;</td>
-          <td class="paramname"> <em>ret_len</em></td><td>&nbsp;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td><td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="acc59796ce2fc0518131240e2244ad2f2"></a><!-- doxytag: member="riakdrv.h::riak_get_json_rs" ref="acc59796ce2fc0518131240e2244ad2f2" args="(RIAK_CONN *connstruct, char *query, int *ret_len)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">json_object** riak_get_json_rs </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structRIAK__CONN.html">RIAK_CONN</a> *&nbsp;</td>
-          <td class="paramname"> <em>connstruct</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">char *&nbsp;</td>
-          <td class="paramname"> <em>query</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

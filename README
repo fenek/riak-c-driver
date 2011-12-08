@@ -66,6 +66,13 @@ Probably too many to list. :) It's very alpha version though...
 
 --- 7. Version history ---
 
+==> v0.022 alpha <==
+- by [wjlroe]: improved makefile, some cosmetic changes to git ignore etc.
+
+==> v0.021 alpha <==
+- putting data ported to Protocol Buffers
+- executing MapReduce ported to Protocol Buffers
+
 ==> v0.02a alpha <==
 - filled most of documentation
 - introduced error reporting
