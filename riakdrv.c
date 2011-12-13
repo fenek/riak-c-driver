@@ -34,6 +34,7 @@
 #include <unistd.h>
 
 #include "riakdrv.h"
+#include "riakerrors.h"
 #include "urlcode.h"
 
 #include "riakproto/riakmessages.pb-c.h"
@@ -375,78 +376,17 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, void *userdata) {
 	return nwrite;
 }
 
-int riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data) {
-	RpbPutReq putReq;
-	RpbContent content;
-	RpbPutResp * putResp;
-	RpbErrorResp * errorResp;
-	int reqSize;
-	char * buffer;
-	RIAK_OP command, result;
-
-	rpb_put_req__init(&putReq);
-	rpb_content__init(&content);
-
-	putReq.bucket.data = bucket;
-	putReq.bucket.len = strlen(bucket);
-	putReq.key.data = key;
-	putReq.key.len = strlen(key);
-	content.value.data = data;
-	content.value.len = strlen(data);
-	content.links = NULL;
-	content.usermeta = NULL;
-	putReq.content = &content;
-
-	reqSize = rpb_put_req__get_packed_size(&putReq);
-	buffer = malloc(reqSize);
-	rpb_put_req__pack(&putReq,buffer);
-
-	command.msgcode = RPB_PUT_REQ;
-	command.msg = buffer;
-	command.length = reqSize+1;
-	result.msg = NULL;
-
-	connstruct->last_error = RERR_OK;
-
-	if(riak_exec_op(connstruct, &command, &result)!=0)
-		return 1;
-
-	/* Received correct response */
-	if(result.msgcode == RPB_PUT_RESP) {
-		/* not used right now */
-		/*putResp = rpb_put_resp__unpack(NULL, result.length-1, result.msg);
-
-		rpb_put_resp__free_unpacked(putResp, NULL);*/
-		/* Riak reported an error */
-	} else if(result.msgcode == RPB_ERROR_RESP) {
-		errorResp = rpb_error_resp__unpack(NULL, result.length-1, result.msg);
-
-		connstruct->last_error = RERR_BUCKET_LIST;
-		riak_copy_error(connstruct, errorResp);
-
-		rpb_error_resp__free_unpacked(errorResp, NULL);
-		return 1;
-		/* Something really bad happened. :( */
-	} else {
-		connstruct->last_error = RERR_UNKNOWN;
-		return 1;
-	}
-
-	return 0;
-}
-
-int riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem, GError **error) {
+int riak_putb(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, char * data, size_t datalen, GError **error) {
 	RIAK_OP command, res;
 	RpbPutReq put_req = RPB_PUT_REQ__INIT;
 	RpbContent put_content = RPB_CONTENT__INIT;
 	int r;
 
-	if(bucket == NULL || key == NULL || elem == NULL)
+	if(bucket == NULL || key == NULL || data == NULL)
 		return 1;
 
-	put_content.value.data =
-		/* Cast away const */ (uint8_t *) json_object_to_json_string(elem);
-	put_content.value.len = strlen((char *) put_content.value.data);
+	put_content.value.data = (uint8_t *) data;
+	put_content.value.len = datalen;
 
 	put_req.bucket.len = bucketlen;
 	put_req.bucket.data = (uint8_t *) bucket;
@@ -474,6 +414,19 @@ int riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char
 	g_free(res.msg);
 
 	return r;
+}
+
+int riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem, GError **error) {
+
+	char * jsondata =
+		/* Cast away const */ (char *) json_object_to_json_string(elem);
+	size_t jsondatalen = strlen(jsondata);
+
+	return riak_putb(connstruct, bucket, bucketlen, key, keylen, jsondata, jsondatalen, error);
+}
+
+int riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data, GError **error) {
+	return riak_putb(connstruct, bucket, strlen(bucket), key, strlen(key), data, strlen(data), error);
 }
 
 int riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem, GError **error) {

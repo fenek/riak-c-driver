@@ -114,7 +114,7 @@ riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets, GError ** error);
  */
 
 extern int
-riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data);
+riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data, GError ** error);
 
 extern int
 riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem, GError ** error);

@@ -52,12 +52,12 @@ int main() {
 		return 1;
 	}
 
-	printf("Putting key1:{'k1':'v1'} into bucket 'drvbucket'... ");
-	if(riak_put(conn, "drvbucket", "key1", "{'k1':'v1'}") != 0) {
-		printf("ERROR\n");
-		printf("Error message: %s\n", RIAK_ERR_MSGS[conn->last_error]);
-	} else {
-		printf("OK\n");
+	printf("Putting key1:{'k1':'v1'} into bucket 'drvbucket':\n");
+	riak_put(conn, "drvbucket", "key1", "{'k1':'v1'}", &err);
+	if (err != NULL) {
+		fprintf(stderr, "put failed: %s\n", err->message);
+		g_error_free(err); err = NULL;
+		return 1;
 	}
 
 	printf("Listing all buckets:\n");
