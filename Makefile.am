@@ -34,8 +34,13 @@ rpmbuild/SRPMS/$(SRCRPM) : riak-c-driver.spec riak-c-driver-$(VERSION).tar.gz
 		 --define 'dist .dist' \
                  -ba $<
 
-.PHONY : rpm
-
 clean-local:
 	rm -rf rpmbuild
 	rm -f *~
+
+doc:
+	rm -rf doc
+	doxygen documentation.conf
+
+.PHONY : rpm doc
+

@@ -60,7 +60,7 @@ int first_time = 1;
 
 GQuark riak_cdriver_error_quark(void)
 {
-	return g_quark_from_static_string("riak-cdriver-error-quark");
+	return g_quark_from_static_string(RIAKDRV_ERROR);
 }
 
 /**
@@ -77,15 +77,13 @@ typedef struct {
 	__uint8_t * msg;
 } RIAK_OP;
 
-/**	\fn void riak_copy_error(RIAK_CONN * connstruct, RpbErrorResp * errorResp)
- * 	\brief Helper function for copying error message from PB structure to RIAK_CONN.
+/**	\fn void riak_copy_error(GError **error, RIAK_OP * res)
+ * 	\brief Helper function for copying error message from PB structure to GError.
  *
- * Simple function that copies error description from RpbErrorResp to RIAK_CONN in such way,
- * that RIAK_CONN.error_msg is cleared (if not NULL) and then error message is allocated to it.
- * Message has following format: "(<Riak error code in hex>): <Riak error message>".
- *
- * @param connstruct Riak connection handle
- * @param errorResp Protocol Buffers structure containing Riak error response
+ * Copies an error message from a ProtoBuf RpbErrorResp message to the GError
+ * structure.
+ * @param GError pointer to a connstruct Riak connection handle
+ * @param res Pointer to RIAK_OP structure which contains Protocol Buffers structure containing Riak error response
  */
 int riak_copy_error(GError **error, RIAK_OP * res) {
 	if (res->msgcode == RPB_ERROR_RESP) {
@@ -203,7 +201,7 @@ struct riak_pb_header {
 #define RIAK_PB_HEADER_SIZE 5
 #define RIAK_MESSAGE_CODE_SIZE 1
 
-/** \fn int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result)
+/** \fn int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result, GError ** error)
  * 	\brief Executes Riak operation via Protocol Buffers socket and receives response.
  *
  * This is universal function for executing Riak operations and receiving responses. It is a wrapper
@@ -213,7 +211,7 @@ struct riak_pb_header {
  * @param connstruct connection handle
  * @param command command to be sent to Riak
  * @param result structure for response; this function won't allocate space and won't check if result structure exists!
- *
+ * @param error will point to a new GError object on error
  * @return 0 if success, error code > 0 when failure
  */
 int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result, GError **error) {

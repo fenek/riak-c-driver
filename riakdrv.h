@@ -25,11 +25,27 @@
 
 #define __RIAKDRV_H__
 
+/** @mainpage
+ * The riak-c-driver library provides a C interface to the Riak database.
+ * See riakdrv.h for documentation on the public API.
+ *
+ * @file
+ * The various functions return a filled-in GError structure when
+ * an error occurs.  See the
+ * <a href="http://developer.gnome.org/glib/2.30/glib-Error-Reporting.html">GLib Error Reporting</a>
+ * documentation for more information on how it works.
+ */
+
 #include <curl/curl.h>
 #include <glib.h>
 #include <json/json_object.h>
 #include <sys/types.h>
 
+/**
+ * String used to generate a GLib <a
+ * href="http://developer.gnome.org/glib/2.30/glib-Quarks.html#GQuark">GQuark</a>,
+ * which is used in the GError domain field.
+ */
 #define RIAKDRV_ERROR "riakdrv"
 
 /* --------------------------- STRUCTURE DEFINITIONS --------------------------- */
@@ -50,7 +66,7 @@ typedef struct {
 
 /* --------------------------- FUNCTIONS DEFINITIONS --------------------------- */
 
-/** \fn RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port)
+/** \fn RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port, GError ** error)
  *  \brief Create new handle.
  *
  * This function creates new Riak handle. It contains both TCP socket for operations using Protocol Buffers
@@ -59,7 +75,7 @@ typedef struct {
  * @param hostname string containing address where Riak server can be accessed, e.g. 127.0.0.1
  * @param pb_port port where Protocol Buffers API is available, e.g. 8087; may be 0, in such case PB operations won't be available
  * @param curl_port port where HTTP server is available, e.g. 8089; may be 0, in such case HTTP operations won't be available
- *
+ * @param error will point to a new GError object on error
  * @return handle to Riak connection; if connstruct != NULL, then connstruct is returned; returns NULL on error
  */
 extern RIAK_CONN *
@@ -75,19 +91,20 @@ riak_init(char * hostname, int pb_port, int curl_port, GError ** error);
  */
 void riak_close(RIAK_CONN * connstruct);
 
-/**	\fn int riak_ping(RIAK_CONN * connstruct)
+/**	\fn int riak_ping(RIAK_CONN * connstruct, GError ** error)
  *	\brief Pings Riak server.
  *
  * Sends ping request to Riak via Protocol Buffers.
  *
  * @param connstruct connection handle
+ * @param error will point to a new GError object on error
  *
  * @return 0 if success, not 0 on error
 */
 extern int
 riak_ping(RIAK_CONN * connstruct, GError ** error);
 
-/**	\fn char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets)
+/**	\fn char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets, GError ** error)
  *	\brief Fetches list of buckets.
  *
  * This function sends list buckets request to Riak and returns array of null-terminated strings containing names
@@ -95,43 +112,57 @@ riak_ping(RIAK_CONN * connstruct, GError ** error);
  *
  * @param connstruct connection handle
  * @param n_buckets pointer to integer, where bucket count will be written
- *
+ * @param error will point to a new GError object on error
  * @return array (of n_buckets length) of null-terminated strings; NULL on error
  */
 extern char **
 riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets, GError ** error);
 
-/** \fn void riak_put_json(char * bucket, char * key, json_object * elem)
- *  \brief Puts JSON data into DB.
+/** \fn void riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data, GError ** error)
+ *  \brief Puts character data into DB.
  *
  *  This function puts JSON data into chosen bucket with certain key.
  *
  *	@param connstruct Riak connection structure
  *  @param bucket name of the bucket for data
  *  @param key key for passed value
- *  @param elem JSON structure which should be inserted
+ *  @param data NUL-terminated buffer containing data to be inserted
+ * @param error will point to a new GError object on error
  *	@return 0 on success, nonzero on failure
  */
-
 extern int
 riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data, GError ** error);
 
-extern int
-riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem, GError ** error);
-
-/** \fn void riak_putb_json(char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem)
+/** \fn void riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem, GError ** error)
  *  \brief Puts JSON data into DB.
  *
  *  This function puts JSON data into chosen bucket with certain key.
- *	The bucket and key may contain 0 bytes.
  *
  *	@param connstruct Riak connection structure
  *  @param bucket name of the bucket for data
- *  @param bucketlen length of the bucket
  *  @param key key for passed value
- *  @param keylen length of the key
  *  @param elem JSON structure which should be inserted
+ * @param error will point to a new GError object on error
  *	@return 0 on success, nonzero on failure
+ */
+extern int
+riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem, GError ** error);
+
+/** \fn void riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem, GError ** error)
+ * \brief Puts JSON data into DB.
+ *
+ * Stores JSON data into Riak database in the specified bucket and key.  The
+ * bucket and key each have an associated length parameter, and may contain
+ * NUL bytes.
+ *
+ * @param connstruct Riak connection structure
+ * @param bucket name of the bucket for data
+ * @param bucketlen length of the bucket
+ * @param key key for passed value
+ * @param keylen length of the key
+ * @param elem JSON structure which should be inserted
+ * @param error will point to a new GError object on error
+ * @return 0 on success, nonzero on failure
  */
 
 extern int
@@ -151,6 +182,10 @@ riak_del(RIAK_CONN * connstruct, char * bucket, char * key, GError ** error);
 json_object ** riak_get_json_mapred(RIAK_CONN * connstruct, char * mapred_statement, int *ret_len);
 char * riak_get_raw_rs(RIAK_CONN * connstruct, char * query);
 
+/**
+ * The RiakCDriverError enum defines the error codes that may be returned in
+ * the GError's code field.
+ */
 typedef enum {
 	RIAK_CDRIVER_ERROR_OK = 0,
 	RIAK_CDRIVER_ERROR_UNKNOWN,			/* Generic unknown error. */
