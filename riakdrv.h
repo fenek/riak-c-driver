@@ -169,10 +169,10 @@ extern int
 riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem, GError ** error);
 
 extern char *
-riak_getb_raw(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, GError ** error);
+riak_getb(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, GError ** error);
 
 extern char *
-riak_get_raw(RIAK_CONN * connstruct, char * bucket, char * key, GError ** error);
+riak_get(RIAK_CONN * connstruct, char * bucket, char * key, GError ** error);
 
 extern int
 riak_delb(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, GError ** error);

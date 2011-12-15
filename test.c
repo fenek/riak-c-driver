@@ -92,9 +92,9 @@ int main() {
 
 	printf("Getting data:\n");
 	{
-		char * data = riak_get_raw(conn, BUCKET, KEY1, &err);
+		char * data = riak_get(conn, BUCKET, KEY1, &err);
 		if (err != NULL) {
-			fprintf(stderr, "get_raw failed: %s\n", err->message);
+			fprintf(stderr, "get failed: %s\n", err->message);
 			g_error_free(err); err = NULL;
 			return 1;
 		}
@@ -112,9 +112,9 @@ int main() {
 
 	printf("Getting data:\n");
 	{
-		char * data = riak_get_raw(conn, BUCKET, KEY1, &err);
+		char * data = riak_get(conn, BUCKET, KEY1, &err);
 		if (err != NULL) {
-			fprintf(stderr, "get_raw failed: %s\n", err->message);
+			fprintf(stderr, "get failed: %s\n", err->message);
 			g_error_free(err); err = NULL;
 			return 1;
 		}
@@ -141,9 +141,9 @@ int main() {
 
 	printf("Getting data:\n");
 	{
-		char * data = riak_getb_raw(conn, STR_SIZE(BUCKET), STR_SIZE(KEY2), &err);
+		char * data = riak_getb(conn, STR_SIZE(BUCKET), STR_SIZE(KEY2), &err);
 		if (err != NULL) {
-			fprintf(stderr, "get_rawb failed: %s\n", err->message);
+			fprintf(stderr, "getb failed: %s\n", err->message);
 			g_error_free(err); err = NULL;
 			return 1;
 		}

@@ -432,7 +432,7 @@ int riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object
 }
 
 #define GET_BUFSIZE (8 * 1024)
-char * riak_getb_raw(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, GError **error) {
+char * riak_getb(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, GError **error) {
 	RIAK_OP command, res;
 	RpbGetReq get_req = RPB_GET_REQ__INIT;
 	RpbGetResp * get_resp;
@@ -484,8 +484,8 @@ char * riak_getb_raw(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, ch
 	return rdata;
 }
 
-char * riak_get_raw(RIAK_CONN * connstruct, char * bucket, char * key, GError **error) {
-	return riak_getb_raw(connstruct, bucket, strlen(bucket), key, strlen(key), error);
+char * riak_get(RIAK_CONN * connstruct, char * bucket, char * key, GError **error) {
+	return riak_getb(connstruct, bucket, strlen(bucket), key, strlen(key), error);
 }
 
 int riak_delb(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, GError **error) {
