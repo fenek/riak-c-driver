@@ -25,11 +25,28 @@
 
 #define __RIAKDRV_H__
 
+/** @mainpage
+ * The riak-c-driver library provides a C interface to the Riak database.
+ * See riakdrv.h for documentation on the public API.
+ *
+ * @file
+ * The various functions return a filled-in GError structure when
+ * an error occurs.  See the
+ * <a href="http://developer.gnome.org/glib/2.30/glib-Error-Reporting.html">GLib Error Reporting</a>
+ * documentation for more information on how it works.
+ */
+
+#include <curl/curl.h>
+#include <glib.h>
 #include <json/json_object.h>
 #include <sys/types.h>
-#include <curl/curl.h>
 
-#include "riakerrors.h"
+/**
+ * String used to generate a GLib <a
+ * href="http://developer.gnome.org/glib/2.30/glib-Quarks.html#GQuark">GQuark</a>,
+ * which is used in the GError domain field.
+ */
+#define RIAKDRV_ERROR "riakdrv"
 
 /* --------------------------- STRUCTURE DEFINITIONS --------------------------- */
 
@@ -41,105 +58,28 @@ typedef struct {
 	char * addr;
 	/** cURL handle */
 	CURL * curlh;
+	/** cURL headers */
+	struct curl_slist * curl_headers;
 	/** Socket descriptor for Protocol Buffers connection */
-	int socket;
-	/** Error code of last operation. Codes can be found in riakerrors.h */
-	int last_error;
-	/** Riak internal error message. Only some operations return this message. Format: "(err code in hex): err msg" */
-	char * error_msg;
+	int sockfd;
 } RIAK_CONN;
-
-/**
- * \brief Riak operation structure.
- *
- * This structure serves both as place for request data and response data.
- */
-typedef struct {
-	/** Length of command. Equals length of msg + 1 (1 byte for msg code). */
-	__uint32_t length;
-	/** Message code. Defined in Riak API, also respective defines are in riakcodes.h. */
-	__uint8_t msgcode;
-	/** Additional message data. Should be NULL if request doesn't pass any additional data. */
-	char * msg;
-} RIAK_OP;
 
 /* --------------------------- FUNCTIONS DEFINITIONS --------------------------- */
 
-/** \fn RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port, RIAK_CONN * connstruct)
+/** \fn RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port, GError ** error)
  *  \brief Create new handle.
  *
  * This function creates new Riak handle. It contains both TCP socket for operations using Protocol Buffers
  * and CURL handle for operations like using Riak Search.
  *
- * WARNING!
- * If connstruct!=NULL, this function will assume that it doesn't describe open connection anyway, therefore
- * will overwrite all values inside structure.
- *
  * @param hostname string containing address where Riak server can be accessed, e.g. 127.0.0.1
  * @param pb_port port where Protocol Buffers API is available, e.g. 8087; may be 0, in such case PB operations won't be available
  * @param curl_port port where HTTP server is available, e.g. 8089; may be 0, in such case HTTP operations won't be available
- * @param connstruct structure for holding Riak connection data; when NULL - new structure will be allocated
- *
+ * @param error will point to a new GError object on error
  * @return handle to Riak connection; if connstruct != NULL, then connstruct is returned; returns NULL on error
  */
-RIAK_CONN * riak_init(char * hostname, int pb_port, int curl_port, RIAK_CONN * connstruct);
-
-/** \fn int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result)
- * 	\brief Executes Riak operation via Protocol Buffers socket and receives response.
- *
- * This is universal function for executing Riak operations and receiving responses. It is a wrapper
- * for socket operations. Ultimately, user shouldn't have to use this function because other functions
- * are to cover all possible operations. Still, probably this function will remain in library API even then.
- *
- * @param connstruct connection handle
- * @param command command to be sent to Riak
- * @param result structure for response; this function won't allocate space and won't check if result structure exists!
- *
- * @return 0 if success, error code > 0 when failure
- */
-int riak_exec_op(RIAK_CONN * connstruct, RIAK_OP * command, RIAK_OP * result);
-
-/**	\fn int riak_ping(RIAK_CONN * connstruct)
- *	\brief Pings Riak server.
- *
- * Sends ping request to Riak via Protocol Buffers.
- *
- * @param connstruct connection handle
- *
- * @return 0 if success, not 0 on error
-*/
-int riak_ping(RIAK_CONN * connstruct);
-
-/**	\fn char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets)
- *	\brief Fetches list of buckets.
- *
- * This function sends list buckets request to Riak and returns array of null-terminated strings containing names
- * of all buckets. This array is not managed later so user should take care of freeing it after usage!
- *
- * @param connstruct connection handle
- * @param n_buckets pointer to integer, where bucket count will be written
- *
- * @return array (of n_buckets length) of null-terminated strings; NULL on error
- */
-char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets);
-
-/** \fn void riak_put_json(char * bucket, char * key, json_object * elem)
- *  \brief Puts JSON data into DB.
- *
- *  This function puts JSON data into chosen bucket with certain key.
- *
- *	@param connstruct Riak connection structure
- *  @param bucket name of the bucket for data
- *  @param key key for passed value
- *  @param elem JSON structure which should be inserted
- */
-
-int riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data);
-
-void riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem);
-
-json_object ** riak_get_json_mapred(RIAK_CONN * connstruct, char * mapred_statement, int *ret_len);
-char * riak_get_raw_rs(RIAK_CONN * connstruct, char * query);
+extern RIAK_CONN *
+riak_init(char * hostname, int pb_port, int curl_port, GError ** error);
 
 /** \fn void riak_close(RIAK_CONN * connstruct)
  *  \brief Closes connection to Riak.
@@ -150,5 +90,125 @@ char * riak_get_raw_rs(RIAK_CONN * connstruct, char * query);
  *  @param connstruct connection structure to be closed and freed.
  */
 void riak_close(RIAK_CONN * connstruct);
+
+/**	\fn int riak_ping(RIAK_CONN * connstruct, GError ** error)
+ *	\brief Pings Riak server.
+ *
+ * Sends ping request to Riak via Protocol Buffers.
+ *
+ * @param connstruct connection handle
+ * @param error will point to a new GError object on error
+ *
+ * @return 0 if success, not 0 on error
+*/
+extern int
+riak_ping(RIAK_CONN * connstruct, GError ** error);
+
+/**	\fn char ** riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets, GError ** error)
+ *	\brief Fetches list of buckets.
+ *
+ * This function sends list buckets request to Riak and returns array of null-terminated strings containing names
+ * of all buckets. This array is not managed later so user should take care of freeing it after usage!
+ *
+ * @param connstruct connection handle
+ * @param n_buckets pointer to integer, where bucket count will be written
+ * @param error will point to a new GError object on error
+ * @return array (of n_buckets length) of null-terminated strings; NULL on error
+ */
+extern char **
+riak_list_buckets(RIAK_CONN * connstruct, int * n_buckets, GError ** error);
+
+/** \fn void riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data, GError ** error)
+ *  \brief Puts character data into DB.
+ *
+ *  This function puts JSON data into chosen bucket with certain key.
+ *
+ *	@param connstruct Riak connection structure
+ *  @param bucket name of the bucket for data
+ *  @param key key for passed value
+ *  @param data NUL-terminated buffer containing data to be inserted
+ * @param error will point to a new GError object on error
+ *	@return 0 on success, nonzero on failure
+ */
+extern int
+riak_put(RIAK_CONN * connstruct, char * bucket, char * key, char * data, GError ** error);
+
+/** \fn void riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem, GError ** error)
+ *  \brief Puts JSON data into DB.
+ *
+ *  This function puts JSON data into chosen bucket with certain key.
+ *
+ *	@param connstruct Riak connection structure
+ *  @param bucket name of the bucket for data
+ *  @param key key for passed value
+ *  @param elem JSON structure which should be inserted
+ * @param error will point to a new GError object on error
+ *	@return 0 on success, nonzero on failure
+ */
+extern int
+riak_put_json(RIAK_CONN * connstruct, char * bucket, char * key, json_object * elem, GError ** error);
+
+/** \fn void riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem, GError ** error)
+ * \brief Puts JSON data into DB.
+ *
+ * Stores JSON data into Riak database in the specified bucket and key.  The
+ * bucket and key each have an associated length parameter, and may contain
+ * NUL bytes.
+ *
+ * @param connstruct Riak connection structure
+ * @param bucket name of the bucket for data
+ * @param bucketlen length of the bucket
+ * @param key key for passed value
+ * @param keylen length of the key
+ * @param elem JSON structure which should be inserted
+ * @param error will point to a new GError object on error
+ * @return 0 on success, nonzero on failure
+ */
+
+extern int
+riak_putb_json(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, json_object * elem, GError ** error);
+
+extern char *
+riak_getb(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, GError ** error);
+
+extern char *
+riak_get(RIAK_CONN * connstruct, char * bucket, char * key, GError ** error);
+
+extern int
+riak_delb(RIAK_CONN * connstruct, char * bucket, size_t bucketlen, char * key, size_t keylen, GError ** error);
+extern int
+riak_del(RIAK_CONN * connstruct, char * bucket, char * key, GError ** error);
+
+json_object ** riak_get_json_mapred(RIAK_CONN * connstruct, char * mapred_statement, int *ret_len);
+char * riak_get_raw_rs(RIAK_CONN * connstruct, char * query);
+
+/**
+ * The RiakCDriverError enum defines the error codes that may be returned in
+ * the GError's code field.
+ */
+typedef enum {
+	RIAK_CDRIVER_ERROR_OK = 0,
+	RIAK_CDRIVER_ERROR_UNKNOWN,			/* Generic unknown error. */
+	/* Errors for riak_init */
+	RIAK_CDRIVER_ERROR_SOCKET,			/* Socket creation error. */
+	RIAK_CDRIVER_ERROR_HOSTNAME,		/* Hostname resolution error. */
+	RIAK_CDRIVER_ERROR_PB_CONNECT,		/* Couldn't connect to PB socket. */
+	RIAK_CDRIVER_ERROR_CURL_INIT,		/* Couldn't initialize cURL handle. */
+	/* Errors for riak_exec_op */
+	RIAK_CDRIVER_ERROR_OP_SEND,			/* Error sending to PB socket. */
+	RIAK_CDRIVER_ERROR_OP_RECV_HDR,		/* Error receiving header from PB. */
+	RIAK_CDRIVER_ERROR_OP_RECV_DATA,	/* Error receiving data from PB */
+	/* Errors from Riak. */
+	RIAK_CDRIVER_ERROR_RIAK_ERROR,
+	RIAK_CDRIVER_ERROR_RIAK_UNEXPECTED,
+	/* Generic error return from cURL. */
+	RIAK_CDRIVER_ERROR_CURL_ERROR,
+} RiakCDriverError;
+
+/*
+ * Local Variables:
+ * tab-width: 4
+ * End:
+ */
 
 #endif

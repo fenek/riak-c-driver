@@ -1,0 +1,38 @@
+name:		riak-c-driver
+summary:	C library for Riak
+version:	@VERSION@
+release:	1%{?dist}
+vendor:		Piotr Nosek (fenek)
+url:		https://github.com/fenek/riak-c-driver
+packager:	David Hull <hull@contentvibe.com>
+license:	unknown
+
+requires:	protobuf-c, libcurl, json-c
+buildrequires:	protobuf-c-devel, libcurl-devel, json-c-devel
+
+buildroot:      %{_tmppath}/%{name}-%{version}-%{release}
+source:         riak-c-driver-%{version}.tar.gz
+
+%description
+
+Library to allow C programs to put and get records from the Riak
+database (http://wiki.basho.com/Riak.html).
+
+%prep
+%setup -q
+
+%build
+%configure
+make
+
+%install
+make install DESTDIR=%{buildroot}
+
+(cd %{buildroot} && find . \( -type f -o -type l \) -print) | sed -e 's/^\.//' >%filelist
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%files -f %filelist
+
+%changelog

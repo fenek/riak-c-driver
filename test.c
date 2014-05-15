@@ -16,52 +16,159 @@
 */
 
 #include <stdlib.h>
+#include <json/json_object.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include "riakdrv.h"
 
+#define STR_SIZE(a) a, sizeof(a)-1
+#define BUCKET "riak-c-driver"
+#define KEY1 "t1"
+#define KEY2 "embedded\0nulls\1"
+
 int main() {
+	GError *err = NULL;
 	RIAK_CONN * conn;
 	char ** buckets;
 	int res, n_buckets, i;
 
 	printf("Connecting... ");
-	conn = riak_init("127.0.0.1", 8087, 0, NULL);
-	if(conn == NULL) {
-		printf("connection failed!\n");
+	conn = riak_init("127.0.0.1", 8087, 8098, &err);
+	if (err != NULL) {
+		fprintf(stderr, "connection failed: %s\n", err->message);
+		g_error_free(err); err = NULL;
 		return 1;
 	}
 	printf("OK\n");
 
-	res = riak_ping(conn);
+	res = riak_ping(conn, &err);
 	printf("Ping: %s\n",  res == 0 ? "OK" : "ERROR");
-	if(res != 0) {
-		printf("Error code: %d\n", res);
+	if (err != NULL) {
+		fprintf(stderr, "ping failed: %s\n", err->message);
+		g_error_free(err); err = NULL;
 		return 1;
 	}
 
-	printf("Putting key1:{'k1':'v1'} into bucket 'drvbucket'... ");
-	if(riak_put(conn, "drvbucket", "key1", "{'k1':'v1'}") != 0) {
-		printf("ERROR\n");
-		printf("Error message: %s\n", RIAK_ERR_MSGS[conn->last_error]);
-	} else {
-		printf("OK\n");
+	printf("Putting key1:{'k1':'v1'} into bucket 'drvbucket':\n");
+	riak_put(conn, "drvbucket", "key1", "{'k1':'v1'}", &err);
+	if (err != NULL) {
+		fprintf(stderr, "put failed: %s\n", err->message);
+		g_error_free(err); err = NULL;
+		return 1;
 	}
 
 	printf("Listing all buckets:\n");
-	buckets = riak_list_buckets(conn, &n_buckets);
+	buckets = riak_list_buckets(conn, &n_buckets, &err);
+	if (err != NULL) {
+		fprintf(stderr, "list_buckets failed: %s\n", err->message);
+		g_error_free(err); err = NULL;
+		return 1;
+	}
 	for(i=0; i<n_buckets; i++)
 		printf("\t%s\n", buckets[i]);
+	for(i=0; i<n_buckets; i++)
+		free(buckets[i]);
+	free(buckets);
+
+	printf("Putting data:\n");
+	{
+		json_object *json_obj = json_object_new_object();
+		json_object_object_add(json_obj, "data",
+							   json_object_new_string("hello world"));
+		json_object_object_add(json_obj, "answer",
+							   json_object_new_int(42));
+		printf("data: >%s<\n", json_object_to_json_string(json_obj));
+		res = riak_put_json(conn, BUCKET, KEY1, json_obj, &err);
+		json_object_put(json_obj);
+		if (err != NULL) {
+			fprintf(stderr, "put_json failed: %s\n", err->message);
+			g_error_free(err); err = NULL;
+			return 1;
+		}
+	}
+
+	printf("Getting data:\n");
+	{
+		char * data = riak_get(conn, BUCKET, KEY1, &err);
+		if (err != NULL) {
+			fprintf(stderr, "get failed: %s\n", err->message);
+			g_error_free(err); err = NULL;
+			return 1;
+		}
+		printf("data: >%s<\n", data);
+		free(data);
+	}
+
+	printf("Deleting record:\n");
+	res = riak_del(conn, BUCKET, KEY1, &err);
+	if (err != NULL) {
+		fprintf(stderr, "del failed: %s\n", err->message);
+		g_error_free(err); err = NULL;
+		return 1;
+	}
+
+	printf("Getting data:\n");
+	{
+		char * data = riak_get(conn, BUCKET, KEY1, &err);
+		if (err != NULL) {
+			fprintf(stderr, "get failed: %s\n", err->message);
+			g_error_free(err); err = NULL;
+			return 1;
+		}
+		printf("data: >%s<\n", data);
+		free(data);
+	}
+
+	printf("Putting data:\n");
+	{
+		json_object *json_obj = json_object_new_object();
+		json_object_object_add(json_obj, "data",
+							   json_object_new_string("goodnight moon"));
+		json_object_object_add(json_obj, "answer",
+							   json_object_new_int(117));
+		printf("data: >%s<\n", json_object_to_json_string(json_obj));
+		res = riak_putb_json(conn, STR_SIZE(BUCKET), STR_SIZE(KEY2), json_obj, &err);
+		json_object_put(json_obj);
+		if (err != NULL) {
+			fprintf(stderr, "putb_json failed: %s\n", err->message);
+			g_error_free(err); err = NULL;
+			return 1;
+		}
+	}
+
+	printf("Getting data:\n");
+	{
+		char * data = riak_getb(conn, STR_SIZE(BUCKET), STR_SIZE(KEY2), &err);
+		if (err != NULL) {
+			fprintf(stderr, "getb failed: %s\n", err->message);
+			g_error_free(err); err = NULL;
+			return 1;
+		}
+		printf("data: >%s<\n", data);
+		free(data);
+	}
+
+	printf("Deleting record:\n");
+	res = riak_delb(conn, STR_SIZE(BUCKET), STR_SIZE(KEY2), &err);
+	if (err != NULL) {
+		fprintf(stderr, "delb failed: %s\n", err->message);
+		g_error_free(err); err = NULL;
+		return 1;
+	}
 
 	printf("Closing connection... ");
 	riak_close(conn);
 	printf("OK\n");
 
-	printf("Possible error codes:\n");
-	for(i=0; i<RERR_MAX_CODE; i++)
-		printf("\t%d: %s\n", i, RIAK_ERR_MSGS[i]);
-
 	return 0;
 }
+
+
+/*
+ * Local Variables:
+ * tab-width: 4
+ * End:
+ */
